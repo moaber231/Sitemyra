@@ -1,0 +1,146 @@
+# Apeiro Monitor — production overlay for a single VPS
+# (Hetzner / DigitalOcean $12–$25/mo) or PaaS (Railway / Render).
+#
+# Usage:
+#   cp .env.example .env   # fill secrets; NEVER commit .env
+#   docker compose -f docker-compose.prod.yml up --build -d
+#   docker compose -f docker-compose.prod.yml exec backend python manage.py migrate
+#
+# Differences from docker-compose.yml (dev):
+#   - Gunicorn serves the API (3 workers, 120s timeout), not runserver.
+#   - Next.js runs the standalone production build, not `npm run dev`.
+#   - No source bind-mounts, no published DB ports, no default passwords.
+#   - restart: unless-stopped + capped JSON logs on every service.
+
+x-logging: &prod-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+      # NEXT_PUBLIC_* is baked at build time: pass the public API origin here
+      # (Railway/Render: set via the platform env UI instead).
+      args:
+        NEXT_PUBLIC_API_URL: ${BACKEND_PUBLIC_URL:-http://localhost:8000}
+    environment:
+      NEXT_PUBLIC_API_URL: ${BACKEND_PUBLIC_URL:-http://localhost:8000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    restart: unless-stopped
+    logging: *prod-logging
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+    # Gunicorn production server (matches backend/Dockerfile CMD).
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
+    env_file:
+      - .env
+    environment:
+      DJANGO_DEBUG: "0"
+      DJANGO_SETTINGS_MODULE: config.settings.production
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    restart: unless-stopped
+    logging: *prod-logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  celery-worker:
+    build:
+      context: ./backend
+    command: celery -A config worker --loglevel=info --concurrency=4
+    env_file:
+      - .env
+    environment:
+      DJANGO_DEBUG: "0"
+      DJANGO_SETTINGS_MODULE: config.settings.production
+    restart: unless-stopped
+    logging: *prod-logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: ./backend
+    command: celery -A config beat --loglevel=info
+    env_file:
+      - .env
+    environment:
+      DJANGO_DEBUG: "0"
+      DJANGO_SETTINGS_MODULE: config.settings.production
+    restart: unless-stopped
+    logging: *prod-logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    # No defaults: fail fast if the operator forgot secrets.
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in .env}
+    # Not published to the host: reachable only inside the compose network.
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    logging: *prod-logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    # Password-protected; backend uses REDIS_URL=redis://:password@redis:6379/0.
+    command: sh -c 'exec redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD is required in .env}"'
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required in .env}
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    logging: *prod-logging
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,650 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+
+  --color-warning: var(--warning);
+  --color-warning-muted: var(--warning-muted);
+
+  --color-danger: var(--danger);
+  --color-danger-muted: var(--danger-muted);
+
+  --font-sans:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+
+  --background: #080c14;
+  --foreground: #e2e8f0;
+
+  --card: #0d1322;
+  --card-foreground: #f1f5f9;
+
+  --primary: #f8fafc;
+  --primary-foreground: #0b1220;
+
+  --secondary: #161e32;
+  --secondary-foreground: #cbd5e1;
+
+  --muted: #111a2e;
+  --muted-foreground: #94a3b8;
+
+  --accent: #c8ef72;
+  --accent-foreground: #131a10;
+
+  --border: #1e293b;
+  --input: #263349;
+  --ring: #c8ef72;
+
+  --success: #4ade80;
+  --success-muted: #0e2a1c;
+
+  --warning: #fbbf24;
+  --warning-muted: #2b2110;
+
+  --danger: #f87171;
+  --danger-muted: #2a1414;
+
+  --radius: 0.85rem;
+}
+
+html {
+  background: var(--background);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(
+      1100px 520px at 88% -8%,
+      color-mix(in srgb, var(--accent) 7%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 460px at -12% 0%,
+      color-mix(in srgb, #3b82f6 6%, transparent),
+      transparent 60%
+    ),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+button,
+[role="button"] {
+  color: var(--foreground);
+}
+
+button.bg-\[var\(--primary\)\],
+a.bg-\[var\(--primary\)\] {
+  color: var(--primary-foreground);
+}
+
+input,
+textarea,
+select {
+  color: var(--foreground);
+  background: var(--card);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+select:invalid {
+  color: var(--muted-foreground);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button {
+  transition-property: color, background-color, border-color, box-shadow,
+    transform, opacity;
+  transition-duration: 180ms;
+  transition-timing-function: ease;
+}
+
+/* ---------------------------------- motion ---------------------------------- */
+
+@keyframes apeiro-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes apeiro-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes apeiro-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes apeiro-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes apeiro-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 4px 1px rgb(52 211 153 / 0.45),
+      0 0 12px 2px rgb(52 211 153 / 0.25);
+  }
+
+  50% {
+    box-shadow:
+      0 0 8px 3px rgb(52 211 153 / 0.7),
+      0 0 20px 6px rgb(52 211 153 / 0.35);
+  }
+}
+
+.animate-apeiro-fade-up {
+  animation: apeiro-fade-up 0.45s ease-out both;
+}
+
+.animate-apeiro-pulse {
+  animation: apeiro-pulse 2s ease-in-out infinite;
+}
+
+.animate-apeiro-pop {
+  animation: apeiro-pop 0.22s ease-out both;
+}
+
+.animate-apeiro-glow {
+  animation: apeiro-glow 2.4s ease-in-out infinite;
+}
+
+/* ---------------------------------- status dots ---------------------------------- */
+
+.status-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.status-dot--on {
+  background: #34d399;
+  box-shadow: 0 0 8px 2px rgb(52 211 153 / 0.45);
+}
+
+.status-dot--on-pulse {
+  background: #34d399;
+  box-shadow: 0 0 8px 2px rgb(52 211 153 / 0.45);
+  animation: apeiro-glow 2.4s ease-in-out infinite;
+}
+
+.status-dot--off {
+  background: #334155;
+  box-shadow: inset 0 0 0 1px rgb(71 85 105 / 0.6);
+}
+
+.status-dot--warning {
+  background: #fbbf24;
+  box-shadow: 0 0 8px 2px rgb(251 191 36 / 0.4);
+}
+
+.status-dot--danger {
+  background: #f87171;
+  box-shadow: 0 0 0 1px rgb(248 113 113 / 0.4), 0 0 10px 1px rgb(248 113 113 / 0.35);
+}
+
+.status-dot--info {
+  background: #60a5fa;
+  box-shadow: 0 0 8px 2px rgb(96 165 250 / 0.4);
+}
+
+.status-dot--accent {
+  background: #818cf8;
+  box-shadow: 0 0 8px 2px rgb(129 140 248 / 0.4);
+}
+
+/* scrollbar-free tab strip */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------------------------------- surfaces ---------------------------------- */
+
+.apeiro-card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(16, 20, 17, 0.03),
+    0 8px 30px rgba(16, 20, 17, 0.04);
+  transition:
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out,
+    border-color 200ms ease-out,
+    background-color 200ms ease-out;
+}
+
+.apeiro-card:hover {
+  border-color: color-mix(in srgb, var(--border) 70%, var(--foreground) 8%);
+}
+
+/* Major glass surface — use for top-level dashboard cards only. */
+.apeiro-glass {
+  background: rgb(15 23 42 / 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgb(30 41 59 / 0.8);
+  box-shadow: 0 8px 32px 0 rgb(0 0 0 / 0.36);
+  border-radius: 1rem;
+  transition:
+    border-color 300ms ease-out,
+    box-shadow 300ms ease-out,
+    transform 200ms ease-out;
+}
+
+.apeiro-glass:hover {
+  border-color: rgb(51 65 85 / 0.6);
+}
+
+/* Flat inner section — prevents "everything is glass". */
+.apeiro-flat {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+}
+
+/* Monitor list cards: tactile, restrained lift. */
+.monitor-card {
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: rgb(13 19 34 / 0.72);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  transition:
+    transform 200ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow 200ms ease-out,
+    background-color 200ms ease-out;
+}
+
+.monitor-card:hover {
+  border-color: rgb(51 65 85 / 0.7);
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 6px rgb(0 0 0 / 0.25),
+    0 12px 32px rgb(0 0 0 / 0.35);
+}
+
+.monitor-card:active {
+  transform: translateY(0) scale(0.998);
+}
+
+/* Staggered entrance — CSS only, no JS library. */
+.apeiro-stagger {
+  opacity: 0;
+  animation: apeiro-fade-up 0.3s ease-out forwards;
+}
+
+.stagger-1 { animation-delay: 0.02s; }
+.stagger-2 { animation-delay: 0.06s; }
+.stagger-3 { animation-delay: 0.1s; }
+.stagger-4 { animation-delay: 0.14s; }
+.stagger-5 { animation-delay: 0.18s; }
+.stagger-6 { animation-delay: 0.22s; }
+.stagger-7 { animation-delay: 0.26s; }
+.stagger-8 { animation-delay: 0.3s; }
+
+.apeiro-interactive {
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.apeiro-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 5px rgba(16, 20, 17, 0.04),
+    0 14px 35px rgba(16, 20, 17, 0.07);
+}
+
+/* ---------------------------------- buttons ---------------------------------- */
+
+.apeiro-button {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease,
+    background-color 150ms ease;
+}
+
+.apeiro-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 20px rgba(16, 20, 17, 0.1);
+}
+
+.apeiro-button:active {
+  transform: translateY(0);
+}
+
+.apeiro-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.625rem 1rem;
+  min-height: 2.5rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition:
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out,
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    color 200ms ease-out,
+    opacity 200ms ease-out;
+}
+
+.apeiro-btn:hover {
+  transform: translateY(-1px);
+}
+
+.apeiro-btn:active {
+  transform: scale(0.97);
+}
+
+.apeiro-btn:focus {
+  outline: none;
+}
+
+.apeiro-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px rgb(99 102 241 / 0.6);
+}
+
+.apeiro-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.apeiro-btn-primary {
+  background: linear-gradient(to right, #4f46e5, #6366f1, #7c3aed);
+  color: #fff;
+  border-color: rgb(129 140 248 / 0.2);
+  box-shadow: 0 0 20px rgb(99 102 241 / 0.3);
+}
+
+.apeiro-btn-primary:hover {
+  background: linear-gradient(to right, #6366f1, #818cf8, #8b5cf6);
+  box-shadow: 0 0 25px rgb(99 102 241 / 0.5);
+}
+
+.apeiro-btn-primary:active {
+  background: linear-gradient(to right, #4338ca, #4f46e5, #6d28d9);
+}
+
+.apeiro-btn-secondary {
+  background: rgb(15 23 42 / 0.8);
+  color: #e2e8f0;
+  border-color: #1e293b;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.apeiro-btn-secondary:hover {
+  background: rgb(30 41 59 / 0.8);
+  color: #fff;
+}
+
+.apeiro-btn-secondary:active {
+  background: rgb(30 41 59 / 0.9);
+}
+
+.apeiro-btn-outline {
+  background: transparent;
+  border-color: #1e293b;
+  color: #cbd5e1;
+}
+
+.apeiro-btn-outline:hover {
+  border-color: #334155;
+  color: #fff;
+  background: rgb(30 41 59 / 0.5);
+}
+
+.apeiro-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted-foreground);
+}
+
+.apeiro-btn-ghost:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.apeiro-btn-danger {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  color: var(--danger);
+}
+
+.apeiro-btn-danger:hover {
+  background: var(--danger-muted);
+}
+
+.apeiro-btn-accent {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.apeiro-btn-accent:hover {
+  box-shadow: 0 7px 22px color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+/* ---------------------------------- inputs ---------------------------------- */
+
+.apeiro-input {
+  width: 100%;
+  height: 2.75rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--input);
+  background: var(--card);
+  color: var(--foreground);
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 2px rgba(16, 20, 17, 0.04);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.apeiro-input:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 22%, transparent);
+}
+
+.apeiro-input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+/* ---------------------------------- badges ---------------------------------- */
+
+.apeiro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* ---------------------------------- skeleton shimmer ---------------------------------- */
+
+.apeiro-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--muted);
+  border-radius: 0.5rem;
+}
+
+.apeiro-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--card) 60%, transparent),
+    transparent
+  );
+  animation: apeiro-shimmer 1.6s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

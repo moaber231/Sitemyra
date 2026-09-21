@@ -1,0 +1,140 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    command: npm run dev
+    environment:
+      NEXT_PUBLIC_API_URL: ${BACKEND_URL:-http://localhost:8000}
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - frontend_next:/app/.next
+    depends_on:
+      backend:
+        condition: service_started
+
+  backend:
+    build:
+      context: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://apeiro:apeiro@postgres:5432/apeiro}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-development-only-secret}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      EMAIL_PROVIDER_API_KEY: ${EMAIL_PROVIDER_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-alerts@example.com}
+      ARTIFACT_STORAGE: ${ARTIFACT_STORAGE:-local}
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
+      AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_STORAGE_REGION: ${AWS_STORAGE_REGION:-us-east-1}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-apeiro}
+      POSTGRES_USER: ${POSTGRES_USER:-apeiro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apeiro}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    # S3-compatible object storage for artifact production use and
+    # self-hosted environments. Disabled by default: set
+    # ARTIFACT_STORAGE=s3 + AWS_* vars to use it.
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-apeiro-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-replace-me-min-8-chars}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery-worker:
+    build:
+      context: ./backend
+    command: celery -A config worker --loglevel=info
+    environment: &backend-environment
+      DATABASE_URL: ${DATABASE_URL:-postgres://apeiro:apeiro@postgres:5432/apeiro}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-development-only-secret}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      EMAIL_PROVIDER_API_KEY: ${EMAIL_PROVIDER_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-alerts@example.com}
+      ARTIFACT_STORAGE: ${ARTIFACT_STORAGE:-local}
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
+      AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_STORAGE_REGION: ${AWS_STORAGE_REGION:-us-east-1}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: ./backend
+    command: celery -A config beat --loglevel=info
+    environment: *backend-environment
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  frontend_node_modules:
+  frontend_next:
+  postgres_data:
+  redis_data:
+  minio_data:

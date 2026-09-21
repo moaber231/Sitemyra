@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+.pytest_cache/
+.coverage/
+
+# Virtual environments
+.venv/
+.venv-linux/
+venv/
+env/
+
+# Environment & secrets
+.env
+!.env.example
+
+# Django / Celery
+celerybeat-schedule
+celerybeat-schedule.db
+/staticfiles/
+/media/
+
+# Monitor artifacts (binary blobs live on disk/S3, never in version control)
+backend/storage/monitor-artifacts/*
+!backend/storage/monitor-artifacts/.gitkeep
+storage/monitor-artifacts/*
+!storage/monitor-artifacts/.gitkeep
+
+# Frontend
+frontend/node_modules/
+node_modules/
+frontend/.next/
+.next/
+frontend/out/
+dist/
+*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
