@@ -70,7 +70,7 @@ function Brand() {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-accent transition-transform duration-200 group-hover:rotate-3">
           <ShieldCheck size={17} />
         </span>
-        <span className="font-semibold tracking-tight">Apeiro</span>
+        <span className="font-semibold tracking-tight">Sitemyra</span>
       </Link>
     </div>
   );
@@ -124,7 +124,7 @@ export default function Sidebar({
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-accent">
                   <ShieldCheck size={17} />
                 </span>
-                <span className="font-semibold tracking-tight">Apeiro</span>
+                <span className="font-semibold tracking-tight">Sitemyra</span>
               </Link>
 
               <button

@@ -39,7 +39,7 @@ export default function Topbar({
 
         <div className="flex shrink-0 items-center gap-2 lg:hidden">
           <ShieldCheck size={18} className="text-accent-foreground" />
-          <span className="font-semibold">Apeiro</span>
+          <span className="font-semibold">Sitemyra</span>
         </div>
 
         <h1 className="hidden truncate text-sm font-semibold sm:block">

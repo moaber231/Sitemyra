@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import httpx
 
 
-USER_AGENT = "ApeiroMonitor/1.0"
+USER_AGENT = "SitemyraMonitor/1.0"
 MAX_RESPONSE_SIZE = 10 * 1024 * 1024
 MAX_REDIRECTS = 5
 

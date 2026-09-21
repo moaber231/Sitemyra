@@ -45,7 +45,7 @@ export default function RegisterPage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-accent">
               <ShieldCheck size={19} />
             </span>
-            <span className="font-semibold">Apeiro</span>
+            <span className="font-semibold">Sitemyra</span>
           </Link>
 
           <div className="relative max-w-md">
@@ -88,7 +88,7 @@ export default function RegisterPage() {
               className="mb-10 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground lg:hidden"
             >
               <ArrowLeft size={15} />
-              Back to Apeiro
+              Back to Sitemyra
             </Link>
 
             <div className="mb-8">
@@ -97,7 +97,7 @@ export default function RegisterPage() {
               </p>
 
               <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-                Create your Apeiro account.
+                Create your Sitemyra account.
               </h1>
 
               <p className="mt-3 text-sm leading-6 text-muted-foreground">

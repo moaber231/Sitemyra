@@ -196,7 +196,7 @@ export function AdvancedConfigPanel({
         </p>
 
         <h2 className="mt-2 text-lg font-semibold">
-          Choose how Apeiro watches this page
+          Choose how Sitemyra watches this page
         </h2>
 
         <p className="mt-1 text-sm text-muted-foreground">

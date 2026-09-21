@@ -113,7 +113,7 @@ def _record_event(monitor, check, event_type):
 
 def _build_subject_message(monitor, check, event_type):
     if event_type == NotificationEvent.CHANGE:
-        subject = f"Apeiro: Change detected — {monitor.name}"
+        subject = f"Sitemyra: Change detected — {monitor.name}"
         message = (
             f"A change was detected on {monitor.name}.\n\n"
             f"URL: {monitor.url}\n"
@@ -121,7 +121,7 @@ def _build_subject_message(monitor, check, event_type):
             f"Status: {check.status_code}\n"
         )
     elif event_type == NotificationEvent.FAILURE:
-        subject = f"Apeiro: Monitor failing — {monitor.name}"
+        subject = f"Sitemyra: Monitor failing — {monitor.name}"
         message = (
             f"A monitor has started failing.\n\n"
             f"Monitor: {monitor.name}\n"
@@ -130,7 +130,7 @@ def _build_subject_message(monitor, check, event_type):
             f"Error: {check.error}\n"
         )
     else:
-        subject = f"Apeiro: Monitor recovered — {monitor.name}"
+        subject = f"Sitemyra: Monitor recovered — {monitor.name}"
         message = (
             f"A monitor has recovered.\n\n"
             f"Monitor: {monitor.name}\n"
@@ -614,11 +614,11 @@ def dispatch_monitor_event(monitor, check, event_type) -> dict:
 def test_channel_delivery(channel, user=None) -> dict:
     """Deliver a test payload via the real provider path. Never raises."""
     monitor_stub = type("MonitorStub", (), {
-        "id": "test", "name": "Apeiro test monitor",
+        "id": "test", "name": "Sitemyra test monitor",
         "url": "https://example.com",
         "user": user or getattr(channel, "user", None),
     })()
-    subject = "Apeiro: Test notification"
+    subject = "Sitemyra: Test notification"
     message = (
         f"Channel '{channel.name}' ({channel.channel_type}) is configured "
         "correctly. This is a test notification."

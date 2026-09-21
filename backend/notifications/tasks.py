@@ -94,14 +94,14 @@ def send_weekly_digests():
                 f"avg latency {round(avg_latency)}ms{price_note}"
             )
         body = (
-            f"Hi {user.email},\n\nYour Apeiro weekly digest "
+            f"Hi {user.email},\n\nYour Sitemyra weekly digest "
             f"({week_ago.date()} -> {now.date()}):\n\n"
             + "\n".join(lines)
-            + "\n\nHappy monitoring,\nApeiro Monitor"
+            + "\n\nHappy monitoring,\nSitemyra"
         )
         try:
             send_mail(
-                subject="Apeiro: Your weekly monitoring digest",
+                subject="Sitemyra: Your weekly monitoring digest",
                 message=body,
                 from_email=None,
                 recipient_list=[user.email],

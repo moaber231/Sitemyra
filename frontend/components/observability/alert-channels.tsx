@@ -77,7 +77,7 @@ export function buildAlertChannels(
 
 export function AlertChannels({
   title = "Alert channels",
-  description = "Route Apeiro alerts to the channels you trust.",
+  description = "Route Sitemyra alerts to the channels you trust.",
   channels,
 }: AlertChannelsProps) {
   const total = channels.length;

@@ -100,14 +100,14 @@ export default function SettingsPage() {
           <h1 className="text-2xl font-semibold">Account settings</h1>
 
           <p className="mt-1 text-sm text-slate-400">
-            Manage how Apeiro keeps you informed.
+            Manage how Sitemyra keeps you informed.
           </p>
         </div>
       </div>
 
       <div id="alerts" className="scroll-mt-24">
         <AlertChannels
-          description="Route Apeiro alerts to the channels you trust. Email is active — connect Slack and Discord webhooks from the Alert Channels page."
+          description="Route Sitemyra alerts to the channels you trust. Email is active — connect Slack and Discord webhooks from the Alert Channels page."
           channels={alertChannels}
         />
       </div>

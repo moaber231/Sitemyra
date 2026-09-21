@@ -197,7 +197,7 @@ function AuthLayout({
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-accent">
               <ShieldCheck size={19} />
             </span>
-            <span className="font-semibold">Apeiro</span>
+            <span className="font-semibold">Sitemyra</span>
           </Link>
 
           <div className="relative max-w-md">
@@ -210,7 +210,7 @@ function AuthLayout({
             </h2>
 
             <p className="mt-5 text-sm leading-7 text-muted-foreground">
-              Apeiro quietly watches your important pages and lets you focus
+              Sitemyra quietly watches your important pages and lets you focus
               on the work that matters.
             </p>
           </div>
@@ -227,7 +227,7 @@ function AuthLayout({
               className="mb-10 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground lg:hidden"
             >
               <ArrowLeft size={15} />
-              Back to Apeiro
+              Back to Sitemyra
             </Link>
 
             <div className="mb-8">

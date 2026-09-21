@@ -77,7 +77,7 @@ export default function HomePage() {
             <ShieldCheck size={19} />
           </span>
           <span className="text-lg font-semibold tracking-tight">
-            Apeiro
+            Sitemyra
           </span>
         </Link>
 
@@ -117,7 +117,7 @@ export default function HomePage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Apeiro watches competitor pricing pages and the content that
+            Sitemyra watches competitor pricing pages and the content that
             matters to you — then fires a Slack or email alert the moment
             something moves. Set it once. Never miss a price change again.
           </p>
@@ -252,7 +252,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <p className="mt-3 text-sm font-medium">
-                    Apeiro: Price changed — Competitor pricing
+                    Sitemyra: Price changed — Competitor pricing
                   </p>
                   <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
                     The tracked price moved €49 → €59. Review the diff in
@@ -286,7 +286,7 @@ export default function HomePage() {
           <Feature
             icon={<DollarSign size={19} />}
             title="Competitor price tracking"
-            text="Point Apeiro at any pricing page. Get alerted the instant a price moves."
+            text="Point Sitemyra at any pricing page. Get alerted the instant a price moves."
           />
           <Feature
             icon={<ScanSearch size={19} />}
@@ -389,7 +389,7 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-border px-5 py-7 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Apeiro Monitor. Know the instant
+        © {new Date().getFullYear()} Sitemyra. Know the instant
         competitors change pricing or page content.
       </footer>
     </main>

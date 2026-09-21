@@ -76,7 +76,7 @@ export default function NewMonitorPage() {
 
         <div className="apeiro-stagger stagger-2 mt-6 mb-6">
           <p className="text-sm leading-6 text-slate-400">
-            Tell Apeiro which page you want to watch. Checks run
+            Tell Sitemyra which page you want to watch. Checks run
             automatically on your chosen interval.
           </p>
         </div>

@@ -409,7 +409,7 @@ def _csv_response(rows):
             )
     resp = HttpResponse(buf.getvalue(), content_type="text/csv")
     resp["Content-Disposition"] = (
-        'attachment; filename="apeiro-compliance-report.csv"'
+        'attachment; filename="sitemyra-compliance-report.csv"'
     )
     return resp
 
@@ -424,7 +424,7 @@ def _pdf_response(rows):
         width, height = letter
         y = height - 50
         c.setFont("Helvetica-Bold", 14)
-        c.drawString(40, y, "Apeiro Monitor - Compliance Report")
+        c.drawString(40, y, "Sitemyra - Compliance Report")
         y -= 20
         c.setFont("Helvetica", 9)
         c.drawString(
@@ -473,7 +473,7 @@ def _pdf_response(rows):
         pdf = buf.getvalue()
     except ImportError:
         # Minimal fallback PDF so the endpoint works without reportlab.
-        lines = ["Apeiro Monitor - Compliance Report", ""]
+        lines = ["Sitemyra - Compliance Report", ""]
         for r in rows:
             lines.append(
                 f"{r['monitor']} | uptime {r['uptime_pct']}% | "
@@ -494,6 +494,6 @@ def _pdf_response(rows):
         ).encode()
     resp = HttpResponse(pdf, content_type="application/pdf")
     resp["Content-Disposition"] = (
-        'attachment; filename="apeiro-compliance-report.pdf"'
+        'attachment; filename="sitemyra-compliance-report.pdf"'
     )
     return resp

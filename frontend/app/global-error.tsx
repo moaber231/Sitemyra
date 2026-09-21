@@ -25,7 +25,7 @@ export default function GlobalError({
             </h1>
 
             <p className="mt-2 text-sm text-muted-foreground">
-              Apeiro encountered an unexpected error.
+              Sitemyra encountered an unexpected error.
             </p>
 
             <button

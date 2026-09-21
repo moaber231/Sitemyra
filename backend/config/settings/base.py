@@ -143,6 +143,20 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+# Email sender identity (Sitemyra rebrand).
+# Production sender mailbox (e.g. info@<sitemyra-domain>) is provided via
+# EMAIL_FROM at deploy time; SMTP host/user/password are also env-only and
+# must never be committed. Display name via EMAIL_FROM_NAME.
+EMAIL_FROM_ADDRESS = os.getenv("EMAIL_FROM", "alerts@example.com").strip()
+EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "Sitemyra").strip()
+if "<" in EMAIL_FROM_ADDRESS:
+    # Operator supplied a full "Name <addr>" value; respect it verbatim.
+    DEFAULT_FROM_EMAIL = EMAIL_FROM_ADDRESS
+elif EMAIL_FROM_NAME:
+    DEFAULT_FROM_EMAIL = f"{EMAIL_FROM_NAME} <{EMAIL_FROM_ADDRESS}>"
+else:
+    DEFAULT_FROM_EMAIL = EMAIL_FROM_ADDRESS
+
 # Stripe / SSO (empty = disabled with loud 503s; Phase 1 safety).
 # Dev-only bypasses: STRIPE_DEV_STUB, STRIPE_DEV_SKIP_WEBHOOK_VERIFY —
 # honoured only when DEBUG is on. OAuth needs no bypass: unconfigured

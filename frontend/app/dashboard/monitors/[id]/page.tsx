@@ -717,7 +717,7 @@ export default function MonitorDetailPage({
         open={editOpen}
         onClose={() => setEditOpen(false)}
         title="Edit monitor"
-        description="Update how Apeiro watches this page."
+        description="Update how Sitemyra watches this page."
       >
         <form
           onSubmit={(event) => {

@@ -170,7 +170,7 @@ export default function DashboardPage() {
                 </h1>
 
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
-                  Apeiro watches your important pages and tells you when
+                  Sitemyra watches your important pages and tells you when
                   something changes, fails, or comes back online.
                 </p>
               </div>
@@ -338,7 +338,7 @@ function EmptyState() {
         </h3>
 
         <p className="mx-auto mt-1.5 max-w-md text-sm leading-6 text-muted-foreground">
-          Add a URL and Apeiro will keep an eye on it for you. You&apos;ll
+          Add a URL and Sitemyra will keep an eye on it for you. You&apos;ll
           know when the content changes or the site goes down.
         </p>
 

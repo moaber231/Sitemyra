@@ -1,4 +1,4 @@
-# Apeiro Monitor — System Architecture & Technical Operations Manual
+# Sitemyra — System Architecture & Technical Operations Manual
 
 > **Audience:** acquirer / buyer technical team, M&A due-diligence reviewers, and future maintainers.
 > **Scope:** entire repository as audited — Next.js frontend, Django/DRF backend, Celery workers, Docker Compose, PostgreSQL/Redis, and on-disk artifacts.
@@ -12,7 +12,7 @@
 
 ### 1.1 Executive Summary
 
-**Apeiro Monitor** is a multi-tenant website change-detection and uptime-monitoring SaaS. Users register watch-targets (URLs); the platform polls them on a schedule, detects content / visual / price changes and outages, and alerts via email, Slack/Discord webhooks, or generic webhooks.
+**Sitemyra** is a multi-tenant website change-detection and uptime-monitoring SaaS. Users register watch-targets (URLs); the platform polls them on a schedule, detects content / visual / price changes and outages, and alerts via email, Slack/Discord webhooks, or generic webhooks.
 
 **Value proposition:** "Know when the web changes without constantly checking." Differentiation comes from four monitoring engines behind one monitor object (cheap HTTP hashing → rendered DOM → pixel screenshots → price extraction), team workspaces with RBAC, Stripe-metered plans, and one-click compliance exports — packaged for SMB buyers who need uptime evidence for audits.
 

@@ -4,8 +4,8 @@ import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/providers/query-provider";
 
 export const metadata: Metadata = {
-  title: "Apeiro Monitor — Know when the web changes.",
-  description: "Monitor important web pages and get alerted when they change, fail, or recover.",
+  title: "Sitemyra — Website Monitoring",
+  description: "Website monitoring that tells you what changed.",
 };
 
 export default function RootLayout({

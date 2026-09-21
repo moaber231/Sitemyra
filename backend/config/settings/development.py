@@ -19,7 +19,4 @@ CSRF_COOKIE_SECURE = False
 SECURE_HSTS_SECONDS = 0
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = os.getenv(
-    "EMAIL_FROM",
-    "alerts@example.com",
-)
+# Sender identity (DEFAULT_FROM_EMAIL) is inherited from base settings.

@@ -119,7 +119,7 @@ export default function OnboardingPage() {
           Catch your first price change in 3 steps
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Point Apeiro at a competitor pricing page, pick price tracking,
+          Point Sitemyra at a competitor pricing page, pick price tracking,
           and get a Slack or email alert the instant it moves.
         </p>
         <Steps current={done ? 4 : step} />

@@ -1,6 +1,6 @@
-# Apeiro Monitor
+# Sitemyra
 
-Apeiro Monitor is a small website change and uptime monitoring service.
+Website monitoring that tells you what changed.
 
 ## Phase 1 foundation
 
@@ -44,6 +44,30 @@ docker compose -f docker-compose.prod.yml exec backend python manage.py migrate
 ```
 
 `/api/health/` reports `postgres` / `redis` / `celery` connectivity (HTTP 200 when all healthy, 503 otherwise) for load-balancer and compose healthchecks.
+
+### Deployment domain configuration
+
+The production Sitemyra domain is **not** hardcoded anywhere. Before going
+live, update these environment variables (see `.env.example`) — no code
+changes are needed:
+
+* `FRONTEND_URL` — public app URL (also used for OAuth fallbacks/email links)
+* `NEXT_PUBLIC_API_URL` / `BACKEND_PUBLIC_URL` — public API origin for the
+  browser bundle and pre-built frontend image
+* `BACKEND_URL` — internal API origin for local development
+* `DJANGO_ALLOWED_HOSTS` — API host(s)
+* `CORS_ALLOWED_ORIGINS` — frontend origin(s) allowed to call the API
+* `GOOGLE_REDIRECT_URI` / `GITHUB_REDIRECT_URI` — must exactly match the
+  redirect URIs registered in the Google/GitHub provider consoles
+  (default: `<FRONTEND_URL>/auth/callback`)
+* Stripe webhook endpoint — `<BACKEND_URL>/api/billing/webhook/` must be
+  registered in the Stripe dashboard (with `STRIPE_WEBHOOK_SECRET`)
+* `EMAIL_FROM` — production sender mailbox (e.g. `info@<your-domain>`);
+  `EMAIL_FROM_NAME` (default `Sitemyra`); `EMAIL_HOST/PORT/USER/PASSWORD/TLS`
+  for the SMTP provider
+
+Provider-console checklists (Google, GitHub, Stripe) and DNS/mailbox setup
+are manual deployment steps — see the final verification report.
 
 ## Authentication
 
