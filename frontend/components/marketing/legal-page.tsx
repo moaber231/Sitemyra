@@ -25,10 +25,11 @@ export function LegalPage({
     <MarketingShell>
       <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20 lg:px-8">
         <header className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="section-label">
+            <span aria-hidden="true" />
             {eyebrow}
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+          </div>
+          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
             {title}
           </h1>
           <p className="mt-5 text-base leading-7 text-muted-foreground">
@@ -36,7 +37,7 @@ export function LegalPage({
           </p>
         </header>
 
-        <div className="marketing-grid mt-12 grid gap-10 border-t-2 border-border pt-10 lg:grid-cols-[13rem_minmax(0,46rem)] lg:gap-16">
+        <div className="marketing-grid mt-12 grid gap-10 rounded-3xl border border-border bg-card/70 p-5 shadow-sm sm:p-8 lg:grid-cols-[13rem_minmax(0,46rem)] lg:gap-16">
           <aside className="lg:sticky lg:top-28 lg:self-start">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
               Policies
@@ -54,7 +55,7 @@ export function LegalPage({
             </nav>
           </aside>
 
-          <article className="min-w-0 space-y-10">{children}</article>
+          <article className="min-w-0 space-y-10 rounded-2xl bg-background/70 p-5 sm:p-7">{children}</article>
         </div>
       </div>
     </MarketingShell>
@@ -86,7 +87,7 @@ export function LegalSection({
 
 export function ReviewNote({ children }: { children: ReactNode }) {
   return (
-    <aside className="rounded-xl border border-warning/30 bg-warning-muted/40 p-4 text-sm leading-6 text-foreground">
+    <aside className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm leading-6 text-foreground shadow-sm">
       <strong className="block text-sm">Operator review note</strong>
       <span className="mt-1 block text-muted-foreground">{children}</span>
     </aside>

@@ -46,8 +46,8 @@ export default function OAuthCallbackPage() {
   }, []);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-5">
-      <div className="apeiro-card w-full max-w-md p-6 text-center sm:p-8">
+    <main className="auth-shell flex min-h-screen items-center justify-center px-5">
+      <div className="apeiro-card w-full max-w-md p-6 text-center shadow-lg sm:p-8">
         {error ? (
           <>
             <h1 className="text-lg font-semibold">Sign-in failed</h1>

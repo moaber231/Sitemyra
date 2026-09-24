@@ -8,7 +8,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-shell min-h-screen bg-background">
       <div className="flex min-h-screen">
         <Sidebar
           mobileOpen={mobileOpen}

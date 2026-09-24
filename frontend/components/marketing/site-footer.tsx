@@ -55,7 +55,7 @@ export function SiteFooter() {
   const contactEmail = getPublicContactEmail();
 
   return (
-    <footer className="marketing-inverted border-t-4">
+    <footer className="marketing-inverted border-t border-white/10">
       <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.35fr_2fr]">
           <div>
@@ -63,7 +63,7 @@ export function SiteFooter() {
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                 <ShieldCheck size={18} aria-hidden="true" />
               </span>
-              <span className="font-semibold tracking-tight">Sitemyra</span>
+              <span className="font-display text-xl text-white">Sitemyra</span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-6 text-muted-foreground">
               Know when your competitors change. An independent SaaS project

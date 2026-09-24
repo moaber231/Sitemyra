@@ -26,7 +26,7 @@ export default function Topbar({
               : "Dashboard";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-card/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
@@ -38,7 +38,7 @@ export default function Topbar({
         </button>
 
         <div className="flex shrink-0 items-center gap-2 lg:hidden">
-          <ShieldCheck size={18} className="text-accent-foreground" />
+          <ShieldCheck size={18} className="text-accent" />
           <span className="font-semibold">Sitemyra</span>
         </div>
 

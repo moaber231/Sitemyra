@@ -114,78 +114,72 @@ export default function HomePage() {
     <MarketingShell>
       <StructuredData />
 
-      <section className="marketing-noise relative overflow-hidden border-b-4 px-5 pb-24 pt-16 sm:px-6 sm:pt-24 lg:px-8 lg:pb-32 lg:pt-32">
-        <div className="mx-auto max-w-6xl">
-          <div className="marketing-hero-mark" aria-hidden="true" />
-          <div className="mt-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="marketing-label text-xs font-medium uppercase">
-                Competitor and website monitoring
-              </p>
-              <p className="mt-3 font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                A focused watchlist for the pages that matter
-              </p>
+      <section className="marketing-noise relative overflow-hidden px-5 pb-24 pt-16 sm:px-6 sm:pt-24 lg:px-8 lg:pb-32 lg:pt-28">
+        <div className="marketing-orb" aria-hidden="true" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
+          <div>
+            <div className="section-label">
+              <span aria-hidden="true" />
+              Competitor and website monitoring
             </div>
-            <p className="max-w-xs text-sm leading-6 text-muted-foreground sm:text-right">
-              Real product. Real founder. Early-stage and transparent.
-            </p>
-          </div>
 
-          <h1 className="marketing-display mt-10 max-w-6xl text-[clamp(3.5rem,10vw,10rem)]">
-            Know when
-            <br />
-            <span className="italic">your competitors</span>
-            <br />
-            change.
-          </h1>
+            <h1 className="marketing-display relative mt-7 max-w-3xl text-[clamp(3.25rem,7vw,5.25rem)]">
+              Know when your competitors <span className="gradient-text">change.</span>
+              <span className="gradient-underline" aria-hidden="true" />
+            </h1>
 
-          <div className="mt-10 grid gap-8 border-t-2 border-border pt-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-            <p className="marketing-body-large max-w-2xl">
+            <p className="marketing-body-large mt-7 max-w-xl text-muted-foreground">
               Monitor competitor pricing, pages, and content automatically. Get
               alerted when something changes.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-              <Link href="/register" className="apeiro-btn apeiro-btn-primary w-full sm:w-auto">
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/register" className="apeiro-btn apeiro-btn-primary group w-full sm:w-auto">
                 Start monitoring free
-                <ArrowRight size={16} strokeWidth={1.5} aria-hidden="true" />
+                <ArrowRight size={16} strokeWidth={1.8} className="transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
               </Link>
               <Link href="/how-it-works" className="apeiro-btn apeiro-btn-outline w-full sm:w-auto">
                 See how it works
               </Link>
             </div>
+
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <Check size={14} className="text-accent" aria-hidden="true" />
+                Free plan available
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Check size={14} className="text-accent" aria-hidden="true" />
+                No credit card to start
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Check size={14} className="text-accent" aria-hidden="true" />
+                Publicly accessible pages
+              </span>
+            </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-foreground">
-            <span className="inline-flex items-center gap-2">
-              <Check size={14} strokeWidth={1.5} aria-hidden="true" />
-              Free plan available
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Check size={14} strokeWidth={1.5} aria-hidden="true" />
-              No credit card to start
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Check size={14} strokeWidth={1.5} aria-hidden="true" />
-              Publicly accessible pages
-            </span>
-          </div>
+          <HeroVisual />
+        </div>
 
-          <div className="mt-20">
-            <DemoMonitor />
-          </div>
+        <div className="relative mx-auto mt-20 max-w-6xl">
+          <DemoMonitor />
         </div>
       </section>
 
       <section
         id="how-it-works"
-        className="marketing-diagonal scroll-mt-24 border-b-4 px-5 py-24 sm:px-6 md:py-32 lg:px-8"
+        className="marketing-diagonal scroll-mt-24 border-y border-border px-5 py-24 sm:px-6 md:py-32 lg:px-8"
         aria-labelledby="workflow-heading"
       >
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
             <div>
-              <p className="marketing-label text-xs font-medium uppercase">A simple workflow</p>
-              <h2 id="workflow-heading" className="mt-4 max-w-xl text-4xl sm:text-6xl">
+              <div className="section-label">
+                <span aria-hidden="true" />
+                A simple workflow
+              </div>
+              <h2 id="workflow-heading" className="mt-5 max-w-xl text-4xl sm:text-6xl">
                 Set it once. See the signal when it matters.
               </h2>
             </div>
@@ -196,22 +190,18 @@ export default function HomePage() {
             </p>
           </div>
 
-          <ol className="mt-16 grid gap-0 border-y-2 border-border md:grid-cols-3">
-            {workflow.map((step, index) => (
+          <ol className="mt-16 grid gap-5 md:grid-cols-3">
+            {workflow.map((step) => (
               <li
                 key={step.number}
-                className={`group border-border p-6 transition-colors duration-100 hover:bg-black hover:text-white sm:p-8 ${
-                  index < workflow.length - 1 ? "border-b-2 md:border-b-0 md:border-r-2" : ""
-                }`}
+                className="group rounded-2xl border border-border bg-card p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-accent/30 hover:shadow-lg sm:p-8"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-sm">{step.number}</span>
-                  <span className="h-3 w-3 border border-current" aria-hidden="true" />
+                  <span className="font-mono text-sm text-accent">{step.number}</span>
+                  <span className="h-3 w-3 rounded-full border border-accent/30 bg-accent/10" aria-hidden="true" />
                 </div>
-                <h3 className="mt-16 text-2xl">{step.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground transition-colors duration-100 group-hover:text-white">
-                  {step.text}
-                </p>
+                <h3 className="mt-16 text-2xl text-foreground">{step.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{step.text}</p>
               </li>
             ))}
           </ol>
@@ -219,10 +209,10 @@ export default function HomePage() {
           <div className="mt-8 text-right">
             <Link
               href="/how-it-works"
-              className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.12em] underline decoration-1 underline-offset-4 transition-colors duration-100 hover:bg-black hover:text-white"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-accent underline decoration-accent/30 underline-offset-4 transition hover:text-accent-secondary"
             >
               See monitoring modes and examples
-              <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" />
+              <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -230,13 +220,16 @@ export default function HomePage() {
 
       <section
         id="features"
-        className="marketing-grid scroll-mt-24 border-b-4 px-5 py-24 sm:px-6 md:py-32 lg:px-8"
+        className="marketing-grid scroll-mt-24 border-b border-border px-5 py-24 sm:px-6 md:py-32 lg:px-8"
         aria-labelledby="features-heading"
       >
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
-            <p className="marketing-label text-xs font-medium uppercase">What you can monitor</p>
-            <h2 id="features-heading" className="mt-4 text-4xl sm:text-6xl">
+            <div className="section-label">
+              <span aria-hidden="true" />
+              What you can monitor
+            </div>
+            <h2 id="features-heading" className="mt-5 text-4xl sm:text-6xl">
               Choose the level of detail that fits the question.
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground">
@@ -245,55 +238,52 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-16 grid border-t-2 border-border sm:grid-cols-2">
+          <div className="mt-16 grid gap-5 sm:grid-cols-2">
             {capabilities.map((capability, index) => (
               <article
                 key={capability.title}
-                className={`group border-b-2 border-border p-6 transition-colors duration-100 hover:bg-black hover:text-white sm:p-8 ${
-                  index % 2 === 0 ? "sm:border-r-2" : ""
-                }`}
+                className="group rounded-2xl border border-border bg-card p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-accent/30 hover:shadow-lg sm:p-8"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <capability.icon size={23} strokeWidth={1.5} aria-hidden="true" />
-                  <span className="font-mono text-[0.65rem] text-muted-foreground transition-colors duration-100 group-hover:text-white">
-                    0{index + 1}
+                  <span className="modern-icon h-11 w-11 rounded-xl transition duration-300 group-hover:scale-105">
+                    <capability.icon size={20} strokeWidth={1.7} aria-hidden="true" />
                   </span>
+                  <span className="font-mono text-[0.65rem] text-muted-foreground">0{index + 1}</span>
                 </div>
-                <h3 className="mt-16 text-2xl">{capability.title}</h3>
-                <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground transition-colors duration-100 group-hover:text-white">
-                  {capability.text}
-                </p>
+                <h3 className="mt-14 text-2xl text-foreground">{capability.title}</h3>
+                <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">{capability.text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="marketing-inverted border-b-4 px-5 py-24 sm:px-6 md:py-32 lg:px-8" aria-labelledby="alerts-heading">
+      <section className="marketing-inverted px-5 py-24 sm:px-6 md:py-32 lg:px-8" aria-labelledby="alerts-heading">
         <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-8 border-b border-white pb-10 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-8 border-b border-white/15 pb-10 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="marketing-label text-xs font-medium uppercase text-white">Notifications</p>
-              <h2 id="alerts-heading" className="mt-4 max-w-2xl text-4xl text-white sm:text-6xl">
+              <div className="section-label section-label--dark">
+                <span aria-hidden="true" />
+                Notifications
+              </div>
+              <h2 id="alerts-heading" className="mt-5 max-w-2xl text-4xl text-white sm:text-6xl">
                 Put the alert where you will see it.
               </h2>
             </div>
-            <p className="max-w-md text-base leading-7 text-white/70 sm:text-right">
+            <p className="max-w-md text-base leading-7 text-slate-300 sm:text-right">
               Sitemyra supports owner email alerts plus the destinations you
               configure. Review the result first, then route the signal.
             </p>
           </div>
 
-          <div className="mt-12 grid border-t border-white sm:grid-cols-2 lg:grid-cols-5">
-            {channels.map((channel, index) => (
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {channels.map((channel) => (
               <div
                 key={channel.label}
-                className={`flex items-center gap-3 border-b border-white p-5 transition-colors duration-100 hover:bg-white hover:text-black ${
-                  index < channels.length - 1 ? "lg:border-r" : ""
-                }`}
+                className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 p-4 text-white transition duration-300 hover:-translate-y-1 hover:border-blue-300/50 hover:bg-white/10"
               >
-                <channel.icon size={20} strokeWidth={1.5} aria-hidden="true" />
-                <span className="font-mono text-[0.68rem] uppercase tracking-[0.1em]">
+                <channel.icon size={20} strokeWidth={1.7} className="text-blue-300" aria-hidden="true" />
+                <span className="font-mono text-[0.68rem] uppercase tracking-[0.08em]">
                   {channel.label}
                 </span>
               </div>
@@ -302,11 +292,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-b-4 px-5 py-24 sm:px-6 md:py-32 lg:px-8" aria-labelledby="audiences-heading">
+      <section className="border-b border-border px-5 py-24 sm:px-6 md:py-32 lg:px-8" aria-labelledby="audiences-heading">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
-            <p className="marketing-label text-xs font-medium uppercase">Who it is for</p>
-            <h2 id="audiences-heading" className="mt-4 text-4xl sm:text-6xl">
+            <div className="section-label">
+              <span aria-hidden="true" />
+              Who it is for
+            </div>
+            <h2 id="audiences-heading" className="mt-5 text-4xl sm:text-6xl">
               A useful watchlist for teams that need to stay informed.
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground">
@@ -315,75 +308,73 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-16 grid border-t-2 border-border sm:grid-cols-2 lg:grid-cols-4">
-            {audiences.map((audience, index) => (
+          <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {audiences.map((audience) => (
               <article
                 key={audience.title}
-                className={`group border-b-2 border-border p-6 transition-colors duration-100 hover:bg-black hover:text-white ${
-                  index < audiences.length - 1 ? "lg:border-r-2" : ""
-                }`}
+                className="group rounded-2xl border border-border bg-card p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-accent/30 hover:shadow-lg"
               >
-                <audience.icon size={22} strokeWidth={1.5} aria-hidden="true" />
-                <h3 className="mt-12 text-xl">{audience.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground transition-colors duration-100 group-hover:text-white">
-                  {audience.text}
-                </p>
+                <span className="modern-icon h-10 w-10 rounded-xl transition duration-300 group-hover:scale-105">
+                  <audience.icon size={19} strokeWidth={1.7} aria-hidden="true" />
+                </span>
+                <h3 className="mt-12 text-xl text-foreground">{audience.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{audience.text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="marketing-rule-light border-b-4 px-5 py-24 sm:px-6 md:py-32 lg:px-8">
+      <section className="border-b border-border px-5 py-24 sm:px-6 md:py-32 lg:px-8">
         <PricingSection />
       </section>
 
-      <section className="marketing-inverted border-b-4 px-5 py-24 sm:px-6 md:py-32 lg:px-8" aria-labelledby="founder-heading">
+      <section className="marketing-inverted px-5 py-24 sm:px-6 md:py-32 lg:px-8" aria-labelledby="founder-heading">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
             <div>
-              <p className="marketing-label text-xs font-medium uppercase text-white">Built independently in Greece</p>
-              <h2 id="founder-heading" className="mt-4 max-w-4xl text-4xl text-white sm:text-6xl">
+              <div className="section-label section-label--dark">
+                <span aria-hidden="true" />
+                Built independently in Greece
+              </div>
+              <h2 id="founder-heading" className="mt-5 max-w-4xl text-4xl text-white sm:text-6xl">
                 Real product. Real founder. Early-stage and transparent.
               </h2>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-white/75">
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
                 Sitemyra started as an independent project by Konstantinos
                 Gkogkos, a student developer in Greece. The goal is simple: make
                 competitor monitoring accessible to smaller businesses without
                 pretending to be a large company.
               </p>
-              <div className="mt-8 flex flex-wrap gap-6 font-mono text-xs uppercase tracking-[0.12em]">
-                <Link href="/about" className="underline underline-offset-4 hover:bg-white hover:text-black">
+              <div className="mt-8 flex flex-wrap gap-6 font-mono text-xs uppercase tracking-[0.1em]">
+                <Link href="/about" className="text-blue-200 underline underline-offset-4 hover:text-white">
                   Read the founder story
                 </Link>
                 <a
                   href="https://github.com/moaber231"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 underline underline-offset-4 hover:bg-white hover:text-black"
+                  className="inline-flex items-center gap-2 text-blue-200 underline underline-offset-4 hover:text-white"
                 >
-                  <ExternalLink size={15} strokeWidth={1.5} aria-hidden="true" />
+                  <ExternalLink size={15} aria-hidden="true" />
                   View GitHub
                 </a>
               </div>
             </div>
-            <div className="border-2 border-white p-6">
-              <div className="flex h-16 w-16 items-center justify-center border border-white font-mono text-xl">
-                KG
-                <span className="sr-only">Konstantinos Gkogkos</span>
-              </div>
-              <p className="mt-6 font-mono text-xs uppercase tracking-[0.12em] text-white/60">
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur">
+              <div className="modern-icon h-16 w-16 rounded-2xl font-mono text-xl">KG</div>
+              <p className="mt-6 font-mono text-xs uppercase tracking-[0.12em] text-slate-400">
                 Founder / independent developer
               </p>
             </div>
           </div>
 
-          <div className="mt-20 grid border-t border-white sm:grid-cols-3">
+          <div className="mt-20 grid gap-4 sm:grid-cols-3">
             {operatingFacts.map(([number, title, text]) => (
-              <div key={number} className="border-b border-white p-5 sm:border-b-0 sm:border-r sm:p-6 last:border-r-0">
-                <span className="font-mono text-xs text-white/60">{number}</span>
+              <div key={number} className="rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur sm:p-6">
+                <span className="font-mono text-xs text-blue-300">{number}</span>
                 <h3 className="mt-8 text-xl text-white">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-white/65">{text}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-300">{text}</p>
               </div>
             ))}
           </div>
@@ -392,8 +383,11 @@ export default function HomePage() {
 
       <section className="marketing-noise px-5 py-24 text-center sm:px-6 md:py-32 lg:px-8">
         <div className="mx-auto max-w-3xl">
-          <div className="marketing-hero-mark mx-auto" aria-hidden="true" />
-          <ShieldCheck size={28} strokeWidth={1.5} className="mx-auto mt-10" aria-hidden="true" />
+          <div className="section-label mx-auto">
+            <span aria-hidden="true" />
+            Start watching smarter
+          </div>
+          <ShieldCheck size={30} strokeWidth={1.6} className="mx-auto mt-8 text-accent" aria-hidden="true" />
           <h2 className="mt-6 text-4xl sm:text-6xl">
             Stop checking competitor pages manually.
           </h2>
@@ -403,10 +397,46 @@ export default function HomePage() {
           </p>
           <Link href="/register" className="apeiro-btn apeiro-btn-primary mt-8">
             Create your free account
-            <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden="true" />
+            <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
           </Link>
         </div>
       </section>
     </MarketingShell>
+  );
+}
+
+function HeroVisual() {
+  return (
+    <div className="relative mx-auto hidden aspect-square w-full max-w-[30rem] lg:block" role="img" aria-label="Sitemyra monitoring workflow illustration">
+      <div className="marketing-grid absolute inset-0 rounded-[2.5rem] border border-border/80 bg-card shadow-xl" />
+      <div className="modern-orbit absolute inset-[12%] rounded-full border-dashed border-accent/30" />
+      <div className="absolute left-[18%] top-[17%] h-3 w-3 rounded-full bg-accent shadow-[0_0_0_8px_rgb(0_82_255_/_0.12)]" />
+      <div className="absolute bottom-[19%] right-[16%] h-2.5 w-2.5 rounded-full bg-accent-secondary shadow-[0_0_0_7px_rgb(77_124_255_/_0.12)]" />
+
+      <div className="modern-float-card absolute left-[12%] top-[18%] w-44 rounded-2xl border border-border bg-card/95 p-4 backdrop-blur sm:w-48">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">Monitor</span>
+          <span className="modern-pulse-dot h-2 w-2 rounded-full bg-success" />
+        </div>
+        <p className="mt-5 text-2xl font-semibold tracking-tight text-foreground">Pricing page</p>
+        <p className="mt-1 font-mono text-[0.68rem] text-muted-foreground">scheduled check</p>
+      </div>
+
+      <div className="modern-float-card-delayed absolute bottom-[14%] right-[8%] w-48 rounded-2xl border border-accent/20 bg-card/95 p-4 shadow-xl backdrop-blur">
+        <div className="flex items-center gap-2">
+          <span className="modern-icon h-8 w-8 rounded-lg"><BellRing size={15} aria-hidden="true" /></span>
+          <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-accent">Alert routed</span>
+        </div>
+        <p className="mt-4 text-sm leading-6 text-foreground">A meaningful change is ready to review.</p>
+      </div>
+
+      <div className="absolute left-[42%] top-[43%] rounded-2xl border border-border bg-background/90 p-4 shadow-lg backdrop-blur">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-accent" />
+          <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-foreground">Sitemyra</span>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">Signal → clarity</p>
+      </div>
+    </div>
   );
 }

@@ -1,23 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Playfair_Display, Source_Serif_4 } from "next/font/google";
+import { Calistoga, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "./marketing.css";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
-const playfair = Playfair_Display({
+const calistoga = Calistoga({
   subsets: ["latin"],
   display: "swap",
-  style: ["normal", "italic"],
-  variable: "--font-playfair",
+  weight: "400",
+  variable: "--font-calistoga",
 });
 
-const sourceSerif = Source_Serif_4({
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  style: ["normal", "italic"],
-  variable: "--font-source-serif",
+  variable: "--font-inter",
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -85,8 +84,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  colorScheme: "dark",
-  themeColor: "#080c14",
+  colorScheme: "light",
+  themeColor: "#fafafa",
 };
 
 export default function RootLayout({
@@ -97,7 +96,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${playfair.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}
+        className={`${calistoga.variable} ${inter.variable} ${jetbrainsMono.variable}`}
       >
         <QueryProvider>
           {children}

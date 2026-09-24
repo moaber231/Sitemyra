@@ -16,11 +16,13 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body className="bg-background text-foreground">
-        <main className="flex min-h-screen items-center justify-center px-6">
-          <div className="apeiro-card w-full max-w-md p-8 text-center">
-            <div className="mx-auto mb-4 h-3 w-3 rounded-full bg-danger" />
+        <main className="auth-shell flex min-h-screen items-center justify-center px-6">
+          <div className="apeiro-card w-full max-w-md p-8 text-center shadow-lg">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-danger-muted text-danger">
+              <span className="h-3 w-3 rounded-full bg-danger" aria-hidden="true" />
+            </div>
 
-            <h1 className="text-xl font-semibold">
+            <h1 className="font-display text-3xl font-normal text-foreground">
               Something went wrong
             </h1>
 

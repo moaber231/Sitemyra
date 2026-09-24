@@ -17,6 +17,7 @@
   --color-muted-foreground: var(--muted-foreground);
 
   --color-accent: var(--accent);
+  --color-accent-secondary: var(--accent-secondary);
   --color-accent-foreground: var(--accent-foreground);
 
   --color-border: var(--border);
@@ -33,6 +34,7 @@
   --color-danger-muted: var(--danger-muted);
 
   --font-sans:
+    var(--font-inter),
     Inter,
     ui-sans-serif,
     system-ui,
@@ -40,75 +42,72 @@
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+  --font-display: var(--font-calistoga), Georgia, serif;
+  --font-mono: var(--font-jetbrains), "Courier New", monospace;
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --background: #080c14;
-  --foreground: #e2e8f0;
+  --background: #fafafa;
+  --foreground: #0f172a;
 
-  --card: #0d1322;
-  --card-foreground: #f1f5f9;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
 
-  --primary: #f8fafc;
-  --primary-foreground: #0b1220;
+  --primary: #0052ff;
+  --primary-foreground: #ffffff;
 
-  --secondary: #161e32;
-  --secondary-foreground: #cbd5e1;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
 
-  --muted: #111a2e;
-  --muted-foreground: #94a3b8;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
 
-  --accent: #c8ef72;
-  --accent-foreground: #131a10;
+  --accent: #0052ff;
+  --accent-secondary: #4d7cff;
+  --accent-foreground: #ffffff;
 
-  --border: #1e293b;
-  --input: #263349;
-  --ring: #c8ef72;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #0052ff;
 
-  --success: #4ade80;
-  --success-muted: #0e2a1c;
+  --success: #16a34a;
+  --success-muted: #dcfce7;
 
-  --warning: #fbbf24;
-  --warning-muted: #2b2110;
+  --warning: #d97706;
+  --warning-muted: #fef3c7;
 
-  --danger: #f87171;
-  --danger-muted: #2a1414;
+  --danger: #dc2626;
+  --danger-muted: #fee2e2;
 
-  --radius: 0.85rem;
+  --radius: 0.9rem;
+  --shadow-sm: 0 1px 3px rgb(15 23 42 / 0.07);
+  --shadow-md: 0 8px 24px rgb(15 23 42 / 0.08);
+  --shadow-lg: 0 18px 42px rgb(15 23 42 / 0.12);
+  --shadow-accent: 0 8px 24px rgb(0 82 255 / 0.22);
+  --shadow-accent-lg: 0 14px 34px rgb(0 82 255 / 0.3);
 }
 
 html {
+  min-height: 100%;
   background: var(--background);
+  scroll-behavior: smooth;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html {
-  min-height: 100%;
-  scroll-behavior: smooth;
-}
-
 body {
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(
-      1100px 520px at 88% -8%,
-      color-mix(in srgb, var(--accent) 7%, transparent),
-      transparent 60%
-    ),
-    radial-gradient(
-      900px 460px at -12% 0%,
-      color-mix(in srgb, #3b82f6 6%, transparent),
-      transparent 60%
-    ),
-    var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  background:
+    radial-gradient(circle at 8% -10%, rgb(0 82 255 / 0.1), transparent 32rem),
+    radial-gradient(circle at 96% 8%, rgb(77 124 255 / 0.08), transparent 28rem),
+    var(--background);
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -134,18 +133,13 @@ a {
 }
 
 ::selection {
-  background: var(--accent);
   color: var(--accent-foreground);
+  background: var(--accent);
 }
 
 button,
 [role="button"] {
   color: var(--foreground);
-}
-
-button.bg-\[var\(--primary\)\],
-a.bg-\[var\(--primary\)\] {
-  color: var(--primary-foreground);
 }
 
 input,
@@ -157,7 +151,7 @@ select {
 
 input::placeholder,
 textarea::placeholder {
-  color: #64748b;
+  color: var(--muted-foreground);
   opacity: 1;
 }
 
@@ -169,7 +163,7 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: 2px solid var(--ring);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 button:focus-visible,
@@ -185,9 +179,9 @@ summary {
 
 code {
   overflow-wrap: anywhere;
-  border-radius: 0.35rem;
+  border-radius: 0.45rem;
   background: var(--secondary);
-  padding: 0.12rem 0.3rem;
+  padding: 0.14rem 0.34rem;
   color: var(--foreground);
   font-size: 0.9em;
 }
@@ -204,8 +198,8 @@ a,
 button {
   transition-property: color, background-color, border-color, box-shadow,
     transform, opacity;
-  transition-duration: 180ms;
-  transition-timing-function: ease;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
 }
 
 /* ---------------------------------- motion ---------------------------------- */
@@ -213,7 +207,7 @@ button {
 @keyframes apeiro-fade-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(18px);
   }
 
   to {
@@ -225,13 +219,13 @@ button {
 @keyframes apeiro-pulse {
   0%,
   100% {
-    opacity: 0.55;
+    opacity: 0.7;
     transform: scale(1);
   }
 
   50% {
     opacity: 1;
-    transform: scale(1.08);
+    transform: scale(1.22);
   }
 }
 
@@ -248,7 +242,7 @@ button {
 @keyframes apeiro-pop {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(4px);
+    transform: scale(0.96) translateY(8px);
   }
 
   to {
@@ -260,20 +254,48 @@ button {
 @keyframes apeiro-glow {
   0%,
   100% {
-    box-shadow:
-      0 0 4px 1px rgb(52 211 153 / 0.45),
-      0 0 12px 2px rgb(52 211 153 / 0.25);
+    box-shadow: 0 0 0 1px rgb(0 82 255 / 0.2), 0 0 16px rgb(0 82 255 / 0.16);
   }
 
   50% {
-    box-shadow:
-      0 0 8px 3px rgb(52 211 153 / 0.7),
-      0 0 20px 6px rgb(52 211 153 / 0.35);
+    box-shadow: 0 0 0 1px rgb(0 82 255 / 0.38), 0 0 28px rgb(0 82 255 / 0.3);
+  }
+}
+
+@keyframes modern-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes modern-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes modern-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(0, -16px, 0) rotate(2deg);
   }
 }
 
 .animate-apeiro-fade-up {
-  animation: apeiro-fade-up 0.45s ease-out both;
+  animation: apeiro-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-apeiro-pulse {
@@ -281,11 +303,23 @@ button {
 }
 
 .animate-apeiro-pop {
-  animation: apeiro-pop 0.22s ease-out both;
+  animation: apeiro-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-apeiro-glow {
   animation: apeiro-glow 2.4s ease-in-out infinite;
+}
+
+.animate-modern-float {
+  animation: modern-float 5s ease-in-out infinite;
+}
+
+.animate-modern-drift {
+  animation: modern-drift 4.5s ease-in-out infinite;
+}
+
+.animate-modern-spin {
+  animation: modern-rotate 60s linear infinite;
 }
 
 /* ---------------------------------- status dots ---------------------------------- */
@@ -298,50 +332,39 @@ button {
   flex-shrink: 0;
 }
 
-.status-dot--on {
-  background: #34d399;
-  box-shadow: 0 0 8px 2px rgb(52 211 153 / 0.45);
+.status-dot--on,
+.status-dot--on-pulse {
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgb(22 163 74 / 0.12);
 }
 
 .status-dot--on-pulse {
-  background: #34d399;
-  box-shadow: 0 0 8px 2px rgb(52 211 153 / 0.45);
-  animation: apeiro-glow 2.4s ease-in-out infinite;
+  animation: apeiro-pulse 2s ease-in-out infinite;
 }
 
 .status-dot--off {
-  background: #334155;
-  box-shadow: inset 0 0 0 1px rgb(71 85 105 / 0.6);
+  background: var(--muted-foreground);
+  box-shadow: inset 0 0 0 1px rgb(100 116 139 / 0.35);
 }
 
 .status-dot--warning {
-  background: #fbbf24;
-  box-shadow: 0 0 8px 2px rgb(251 191 36 / 0.4);
+  background: var(--warning);
+  box-shadow: 0 0 0 3px rgb(217 119 6 / 0.12);
 }
 
 .status-dot--danger {
-  background: #f87171;
-  box-shadow: 0 0 0 1px rgb(248 113 113 / 0.4), 0 0 10px 1px rgb(248 113 113 / 0.35);
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.12);
 }
 
 .status-dot--info {
-  background: #60a5fa;
-  box-shadow: 0 0 8px 2px rgb(96 165 250 / 0.4);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgb(0 82 255 / 0.12);
 }
 
 .status-dot--accent {
-  background: #818cf8;
-  box-shadow: 0 0 8px 2px rgb(129 140 248 / 0.4);
-}
-
-/* scrollbar-free tab strip */
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+  background: var(--accent-secondary);
+  box-shadow: 0 0 0 3px rgb(77 124 255 / 0.14);
 }
 
 /* ---------------------------------- surfaces ---------------------------------- */
@@ -350,9 +373,7 @@ button {
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: var(--radius);
-  box-shadow:
-    0 1px 2px rgba(16, 20, 17, 0.03),
-    0 8px 30px rgba(16, 20, 17, 0.04);
+  box-shadow: var(--shadow-sm);
   transition:
     transform 200ms ease-out,
     box-shadow 200ms ease-out,
@@ -361,40 +382,40 @@ button {
 }
 
 .apeiro-card:hover {
-  border-color: color-mix(in srgb, var(--border) 70%, var(--foreground) 8%);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
-/* Major glass surface — use for top-level dashboard cards only. */
 .apeiro-glass {
-  background: rgb(15 23 42 / 0.4);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgb(30 41 59 / 0.8);
-  box-shadow: 0 8px 32px 0 rgb(0 0 0 / 0.36);
+  background: rgb(255 255 255 / 0.76);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgb(226 232 240 / 0.9);
+  box-shadow: var(--shadow-md);
   border-radius: 1rem;
   transition:
-    border-color 300ms ease-out,
-    box-shadow 300ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow 200ms ease-out,
     transform 200ms ease-out;
 }
 
 .apeiro-glass:hover {
-  border-color: rgb(51 65 85 / 0.6);
+  border-color: rgb(0 82 255 / 0.28);
+  box-shadow: var(--shadow-lg);
 }
 
-/* Flat inner section — prevents "everything is glass". */
 .apeiro-flat {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 0.75rem;
+  border-radius: 0.8rem;
 }
 
-/* Monitor list cards: tactile, restrained lift. */
 .monitor-card {
   border-radius: 1rem;
   border: 1px solid var(--border);
-  background: rgb(13 19 34 / 0.72);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
   transition:
     transform 200ms ease-out,
     border-color 200ms ease-out,
@@ -403,64 +424,60 @@ button {
 }
 
 .monitor-card:hover {
-  border-color: rgb(51 65 85 / 0.7);
-  transform: translateY(-1px);
-  box-shadow:
-    0 2px 6px rgb(0 0 0 / 0.25),
-    0 12px 32px rgb(0 0 0 / 0.35);
+  border-color: rgb(0 82 255 / 0.3);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 
 .monitor-card:active {
-  transform: translateY(0) scale(0.998);
+  transform: translateY(-1px) scale(0.995);
 }
 
-/* Staggered entrance — CSS only, no JS library. */
 .apeiro-stagger {
   opacity: 0;
-  animation: apeiro-fade-up 0.3s ease-out forwards;
+  animation: apeiro-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.stagger-1 { animation-delay: 0.02s; }
-.stagger-2 { animation-delay: 0.06s; }
-.stagger-3 { animation-delay: 0.1s; }
-.stagger-4 { animation-delay: 0.14s; }
-.stagger-5 { animation-delay: 0.18s; }
-.stagger-6 { animation-delay: 0.22s; }
-.stagger-7 { animation-delay: 0.26s; }
-.stagger-8 { animation-delay: 0.3s; }
+.stagger-1 { animation-delay: 0.04s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.16s; }
+.stagger-4 { animation-delay: 0.22s; }
+.stagger-5 { animation-delay: 0.28s; }
+.stagger-6 { animation-delay: 0.34s; }
+.stagger-7 { animation-delay: 0.4s; }
+.stagger-8 { animation-delay: 0.46s; }
 
 .apeiro-interactive {
   transition:
-    transform 160ms ease,
-    opacity 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease;
+    transform 200ms ease-out,
+    opacity 200ms ease-out,
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow 200ms ease-out;
 }
 
 .apeiro-interactive:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 2px 5px rgba(16, 20, 17, 0.04),
-    0 14px 35px rgba(16, 20, 17, 0.07);
+  box-shadow: var(--shadow-md);
 }
 
 /* ---------------------------------- buttons ---------------------------------- */
 
 .apeiro-button {
   transition:
-    transform 150ms ease,
-    box-shadow 150ms ease,
-    opacity 150ms ease,
-    background-color 150ms ease;
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out,
+    opacity 200ms ease-out,
+    background-color 200ms ease-out;
 }
 
 .apeiro-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 7px 20px rgba(16, 20, 17, 0.1);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-accent);
 }
 
 .apeiro-button:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
 }
 
 .apeiro-btn {
@@ -468,12 +485,12 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 0.75rem;
+  border-radius: 0.8rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
-  padding: 0.625rem 1rem;
-  min-height: 2.5rem;
+  padding: 0.75rem 1.1rem;
+  min-height: 2.75rem;
   border: 1px solid transparent;
   white-space: nowrap;
   transition:
@@ -482,15 +499,16 @@ button {
     background-color 200ms ease-out,
     border-color 200ms ease-out,
     color 200ms ease-out,
-    opacity 200ms ease-out;
+    opacity 200ms ease-out,
+    filter 200ms ease-out;
 }
 
 .apeiro-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .apeiro-btn:active {
-  transform: scale(0.97);
+  transform: translateY(0) scale(0.98);
 }
 
 .apeiro-btn:focus {
@@ -498,8 +516,8 @@ button {
 }
 
 .apeiro-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px rgb(99 102 241 / 0.6);
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
 }
 
 .apeiro-btn:disabled {
@@ -510,106 +528,102 @@ button {
   pointer-events: none;
 }
 
-.apeiro-btn-primary {
-  background: linear-gradient(to right, #4f46e5, #6366f1, #7c3aed);
-  color: #fff;
-  border-color: rgb(129 140 248 / 0.2);
-  box-shadow: 0 0 20px rgb(99 102 241 / 0.3);
+.apeiro-btn-primary,
+.apeiro-btn-accent {
+  color: var(--accent-foreground);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  border-color: rgb(0 82 255 / 0.2);
+  box-shadow: var(--shadow-accent);
 }
 
-.apeiro-btn-primary:hover {
-  background: linear-gradient(to right, #6366f1, #818cf8, #8b5cf6);
-  box-shadow: 0 0 25px rgb(99 102 241 / 0.5);
-}
-
-.apeiro-btn-primary:active {
-  background: linear-gradient(to right, #4338ca, #4f46e5, #6d28d9);
+.apeiro-btn-primary:hover,
+.apeiro-btn-accent:hover {
+  color: var(--accent-foreground);
+  background: linear-gradient(135deg, #0047e6, #3d6cff);
+  box-shadow: var(--shadow-accent-lg);
+  filter: brightness(1.05);
 }
 
 .apeiro-btn-secondary {
-  background: rgb(15 23 42 / 0.8);
-  color: #e2e8f0;
-  border-color: #1e293b;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  color: var(--foreground);
+  background: rgb(241 245 249 / 0.86);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 .apeiro-btn-secondary:hover {
-  background: rgb(30 41 59 / 0.8);
-  color: #fff;
-}
-
-.apeiro-btn-secondary:active {
-  background: rgb(30 41 59 / 0.9);
+  color: var(--foreground);
+  background: var(--card);
+  border-color: rgb(0 82 255 / 0.28);
+  box-shadow: var(--shadow-md);
 }
 
 .apeiro-btn-outline {
+  color: var(--foreground);
   background: transparent;
-  border-color: #1e293b;
-  color: #cbd5e1;
+  border-color: var(--border);
 }
 
 .apeiro-btn-outline:hover {
-  border-color: #334155;
-  color: #fff;
-  background: rgb(30 41 59 / 0.5);
+  color: var(--accent);
+  background: rgb(0 82 255 / 0.05);
+  border-color: rgb(0 82 255 / 0.32);
+  box-shadow: var(--shadow-sm);
 }
 
 .apeiro-btn-ghost {
+  color: var(--muted-foreground);
   background: transparent;
   border-color: transparent;
-  color: var(--muted-foreground);
 }
 
 .apeiro-btn-ghost:hover {
-  background: var(--muted);
   color: var(--foreground);
+  background: var(--muted);
 }
 
 .apeiro-btn-danger {
-  background: transparent;
-  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
   color: var(--danger);
+  background: var(--danger-muted);
+  border-color: color-mix(in srgb, var(--danger) 25%, transparent);
 }
 
 .apeiro-btn-danger:hover {
-  background: var(--danger-muted);
-}
-
-.apeiro-btn-accent {
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.apeiro-btn-accent:hover {
-  box-shadow: 0 7px 22px color-mix(in srgb, var(--accent) 32%, transparent);
+  color: #b91c1c;
+  background: color-mix(in srgb, var(--danger) 16%, white);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
 }
 
 /* ---------------------------------- inputs ---------------------------------- */
 
 .apeiro-input {
   width: 100%;
-  height: 2.75rem;
-  border-radius: 0.7rem;
+  height: 3rem;
+  border-radius: 0.8rem;
   border: 1px solid var(--input);
   background: var(--card);
   color: var(--foreground);
-  padding: 0 0.75rem;
+  padding: 0 0.9rem;
   font-size: 0.875rem;
-  box-shadow: 0 1px 2px rgba(16, 20, 17, 0.04);
+  box-shadow: var(--shadow-sm);
   transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+    border-color 200ms ease-out,
+    box-shadow 200ms ease-out,
+    background-color 200ms ease-out;
+}
+
+.apeiro-input:hover {
+  border-color: rgb(0 82 255 / 0.28);
 }
 
 .apeiro-input:focus {
   outline: none;
   border-color: var(--ring);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 22%, transparent);
+  box-shadow: 0 0 0 3px rgb(0 82 255 / 0.12), var(--shadow-sm);
 }
 
 .apeiro-input::placeholder {
-  color: #64748b;
+  color: var(--muted-foreground);
   opacity: 1;
 }
 
@@ -620,19 +634,19 @@ button {
   align-items: center;
   gap: 0.375rem;
   border-radius: 9999px;
-  padding: 0.25rem 0.625rem;
-  font-size: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.7rem;
   font-weight: 600;
   line-height: 1.25;
 }
 
-/* ---------------------------------- skeleton shimmer ---------------------------------- */
+/* ---------------------------------- skeleton ---------------------------------- */
 
 .apeiro-skeleton {
   position: relative;
   overflow: hidden;
   background: var(--muted);
-  border-radius: 0.5rem;
+  border-radius: 0.65rem;
 }
 
 .apeiro-skeleton::after {
@@ -643,7 +657,7 @@ button {
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--card) 60%, transparent),
+    rgb(255 255 255 / 0.72),
     transparent
   );
   animation: apeiro-shimmer 1.6s ease infinite;

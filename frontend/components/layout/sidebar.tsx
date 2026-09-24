@@ -47,8 +47,8 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
             aria-current={active ? "page" : undefined}
             className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
               active
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-primary text-primary-foreground shadow-[0_8px_20px_rgb(0_82_255_/_0.2)]"
+                : "text-muted-foreground hover:bg-accent/5 hover:text-accent"
             }`}
           >
             <item.icon
@@ -67,7 +67,7 @@ function Brand() {
   return (
     <div className="flex h-16 items-center justify-between border-b border-border px-5">
       <Link href="/dashboard" className="group flex items-center gap-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-accent transition-transform duration-200 group-hover:rotate-3">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-secondary text-white shadow-[0_6px_16px_rgb(0_82_255_/_0.24)] transition-transform duration-200 group-hover:rotate-3">
           <ShieldCheck size={17} />
         </span>
         <span className="font-semibold tracking-tight">Sitemyra</span>
@@ -121,7 +121,7 @@ export default function Sidebar({
                 onClick={onClose}
                 className="flex items-center gap-2.5"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-accent">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-secondary text-white shadow-[0_6px_16px_rgb(0_82_255_/_0.24)]">
                   <ShieldCheck size={17} />
                 </span>
                 <span className="font-semibold tracking-tight">Sitemyra</span>

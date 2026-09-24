@@ -21,21 +21,21 @@ export interface ButtonProps
 }
 
 const buttonBase =
-  "relative inline-flex items-center justify-center font-medium transition-all duration-200 ease-out rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
+  "relative inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white border border-indigo-400/20 shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:from-indigo-500 hover:to-violet-500 hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] hover:-translate-y-px",
+    "border border-accent/20 bg-gradient-to-br from-accent to-accent-secondary text-white shadow-[0_8px_24px_rgb(0_82_255_/_0.22)] hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgb(0_82_255_/_0.3)]",
   secondary:
-    "bg-slate-900/80 hover:bg-slate-800/80 text-slate-200 hover:text-white border border-slate-800 backdrop-blur-md active:bg-slate-800/90",
+    "border border-border bg-muted text-foreground shadow-sm hover:-translate-y-0.5 hover:border-accent/25 hover:bg-accent/5 hover:shadow-md",
   outline:
-    "border border-slate-800 hover:border-slate-700 bg-transparent text-slate-300 hover:text-white hover:bg-slate-800/50",
+    "border border-border bg-transparent text-foreground hover:-translate-y-0.5 hover:border-accent/30 hover:bg-accent/5 hover:text-accent hover:shadow-sm",
   ghost:
-    "border border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/60",
+    "border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
   danger:
-    "border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 hover:border-red-500/40",
+    "border border-danger/25 bg-danger-muted text-danger hover:-translate-y-0.5 hover:border-danger/40 hover:bg-danger/15",
   accent:
-    "bg-[var(--accent)] text-[var(--accent-foreground)] hover:shadow-[0_7px_22px_color-mix(in_srgb,var(--accent)_32%,transparent)] hover:-translate-y-px",
+    "border border-accent/20 bg-accent text-accent-foreground shadow-[0_8px_24px_rgb(0_82_255_/_0.22)] hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgb(0_82_255_/_0.3)]",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

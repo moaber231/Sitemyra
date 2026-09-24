@@ -1,6 +1,9 @@
+import { AppShell } from "@/components/layout/app-shell";
+
 export default function MonitorsLoading() {
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading monitors">
+    <AppShell>
+      <div className="space-y-6" aria-busy="true" aria-label="Loading monitors">
       <div className="border-b border-slate-800/60 py-4">
         <div className="flex items-center gap-3">
           <div className="apeiro-skeleton h-9 w-9 rounded-xl bg-slate-800/50" />
@@ -24,6 +27,7 @@ export default function MonitorsLoading() {
           </div>
         ))}
       </div>
-    </div>
+      </div>
+    </AppShell>
   );
 }

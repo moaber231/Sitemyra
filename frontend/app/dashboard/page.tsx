@@ -148,9 +148,9 @@ export default function DashboardPage() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-0 py-6 sm:px-0 lg:py-9">
         <div className="animate-apeiro-fade-up">
-          <div className="relative overflow-hidden rounded-2xl border border-emerald-500/15 bg-[linear-gradient(135deg,#0d1322_0%,#101c33_55%,#0d1a2e_100%)] p-6 text-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.45)] sm:p-8">
+          <div className="dashboard-hero p-6 sm:p-8">
             <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-accent opacity-[0.10] blur-3xl" />
-            <div className="pointer-events-none absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-emerald-500 opacity-[0.08] blur-3xl" />
+            <div className="pointer-events-none absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-accent-secondary opacity-[0.08] blur-3xl" />
 
             <div className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 select-none text-[9rem] font-black leading-none tracking-tighter opacity-[0.04] lg:block">
               {attentionCount === 0 ? "ALL GOOD" : "ACTION"}
@@ -158,18 +158,18 @@ export default function DashboardPage() {
 
             <div className="relative flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
               <div className="max-w-2xl">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/15 bg-white/70 px-3 py-1 text-xs font-medium text-accent">
                   <Activity size={13} className="text-accent" />
                   {attentionCount === 0
                     ? "Everything looks good"
                     : `${attentionCount} monitor${attentionCount === 1 ? "" : "s"} need attention`}
                 </div>
 
-                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                   Know when the web changes.
                 </h1>
 
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
+                <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                   Sitemyra watches your important pages and tells you when
                   something changes, fails, or comes back online.
                 </p>

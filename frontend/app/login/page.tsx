@@ -188,13 +188,13 @@ function AuthLayout({
   footer: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto grid min-h-screen max-w-7xl lg:grid-cols-2">
-        <div className="relative hidden flex-col justify-between overflow-hidden p-8 lg:flex lg:p-12">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-accent opacity-[0.08] blur-3xl" />
+    <main className="auth-shell min-h-screen">
+      <div className="mx-auto grid min-h-screen max-w-6xl lg:grid-cols-2">
+        <div className="auth-panel relative hidden flex-col justify-between overflow-hidden rounded-r-[2rem] p-8 lg:flex lg:p-12">
+          <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-accent opacity-20 blur-3xl" />
 
           <Link href="/" className="relative flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-accent">
+            <span className="modern-icon h-9 w-9 rounded-xl">
               <ShieldCheck size={19} />
             </span>
             <span className="font-semibold">Sitemyra</span>
@@ -203,7 +203,7 @@ function AuthLayout({
           <div className="relative max-w-md">
             <div className="mb-5 h-1 w-12 rounded-full bg-accent" />
 
-            <h2 className="text-4xl font-semibold tracking-tight">
+            <h2 className="font-display text-4xl font-normal tracking-tight text-white">
               Know what changed.
               <br />
               Without constantly checking.
@@ -235,7 +235,7 @@ function AuthLayout({
                 {eyebrow}
               </p>
 
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+              <h1 className="mt-2 font-display text-3xl font-normal tracking-tight text-foreground">
                 {title}
               </h1>
 
@@ -244,7 +244,7 @@ function AuthLayout({
               </p>
             </div>
 
-            <div className="apeiro-card p-6 sm:p-8">{children}</div>
+            <div className="apeiro-card p-6 shadow-lg sm:p-8">{children}</div>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               {footer}

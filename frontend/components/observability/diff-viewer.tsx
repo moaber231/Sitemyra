@@ -267,7 +267,7 @@ export function DiffViewer({
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-[#070a11]">
+      <div className="code-surface overflow-x-auto">
         {hasChanges ? (
           <div className="min-w-[42rem] py-2 font-mono text-[0.8125rem] leading-6">
             <div className="flex items-center gap-2 bg-slate-800/40 px-4 py-1.5 text-xs font-medium text-slate-500">

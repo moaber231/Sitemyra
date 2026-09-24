@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { getMonitors, type Monitor } from "@/lib/api/monitors";
+import { AppShell } from "@/components/layout/app-shell";
 import { DashboardHeader } from "@/components/navigation/DashboardHeader";
 
 type Filter = "all" | "healthy" | "changed" | "failing" | "paused";
@@ -75,7 +76,8 @@ export default function MonitorsPage() {
   }, [monitors]);
 
   return (
-    <div className="relative space-y-6">
+    <AppShell>
+      <div className="relative space-y-6">
       <div
         aria-hidden="true"
         className="absolute -z-10 left-1/2 top-0 h-72 w-72 -translate-x-1/2 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none"
@@ -232,7 +234,8 @@ export default function MonitorsPage() {
             ))}
           </div>
         )}
-    </div>
+      </div>
+    </AppShell>
   );
 }
 

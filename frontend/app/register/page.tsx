@@ -36,13 +36,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto grid min-h-screen max-w-7xl lg:grid-cols-2">
-        <div className="relative hidden overflow-hidden bg-[#0e1310] p-12 text-white lg:flex lg:flex-col lg:justify-between">
-          <div className="pointer-events-none absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-accent opacity-10 blur-3xl" />
+    <main className="auth-shell min-h-screen">
+      <div className="mx-auto grid min-h-screen max-w-6xl lg:grid-cols-2">
+        <div className="auth-panel relative hidden overflow-hidden rounded-r-[2rem] p-12 text-white lg:flex lg:flex-col lg:justify-between">
+          <div className="pointer-events-none absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-accent opacity-20 blur-3xl" />
 
           <Link href="/" className="relative flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-accent">
+            <span className="modern-icon h-9 w-9 rounded-xl">
               <ShieldCheck size={19} />
             </span>
             <span className="font-semibold">Sitemyra</span>
@@ -53,7 +53,7 @@ export default function RegisterPage() {
               Start in minutes
             </p>
 
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+            <h2 className="mt-3 font-display text-4xl font-normal tracking-tight text-white">
               Put your important pages on autopilot.
             </h2>
 
@@ -67,7 +67,7 @@ export default function RegisterPage() {
                   key={item}
                   className="flex items-center gap-3 text-sm text-white/75"
                 >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[#131a10]">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white shadow-[0_4px_12px_rgb(0_82_255_/_0.28)]">
                     <Check size={14} />
                   </span>
                   {item}
@@ -96,7 +96,7 @@ export default function RegisterPage() {
                 Get started
               </p>
 
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+              <h1 className="mt-2 font-display text-3xl font-normal tracking-tight text-foreground">
                 Create your Sitemyra account.
               </h1>
 

@@ -18,7 +18,7 @@ export function BackButton({
     <Link
       href={href}
       aria-label={label}
-      className={`group inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-400 transition-colors duration-200 hover:bg-slate-800/80 hover:text-slate-100 ${
+      className={`group inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:bg-accent/5 hover:text-accent ${
         className ?? ""
       }`}
     >

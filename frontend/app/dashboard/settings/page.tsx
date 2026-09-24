@@ -10,6 +10,7 @@ import {
   updateNotificationPreferences,
   type NotificationPreferences,
 } from "@/lib/api/notifications";
+import { AppShell } from "@/components/layout/app-shell";
 import { BackButton } from "@/components/ui/back-button";
 import {
   AlertChannels,
@@ -98,7 +99,8 @@ export default function SettingsPage() {
   const alertChannels = buildAlertChannels({ email: emailActive });
 
   return (
-    <div className="mx-auto max-w-3xl animate-apeiro-fade-up space-y-6">
+    <AppShell>
+      <div className="mx-auto max-w-3xl animate-apeiro-fade-up space-y-6">
       <div>
         <BackButton href="/dashboard" label="Back to dashboard" />
 
@@ -172,7 +174,8 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
