@@ -71,8 +71,8 @@ const examples = [
 export default function HowItWorksPage() {
   return (
     <MarketingShell>
-      <section className="relative overflow-hidden px-5 pb-16 pt-16 sm:px-6 sm:pt-24 lg:px-8">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-accent opacity-10 blur-3xl" />
+      <section className="marketing-noise relative overflow-hidden border-b-4 px-5 pb-16 pt-16 sm:px-6 sm:pt-24 lg:px-8">
+        <div className="marketing-orb" aria-hidden="true" />
         <div className="relative mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             How it works
@@ -87,7 +87,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-card/50 px-5 py-16 sm:px-6 lg:px-8">
+      <section className="marketing-diagonal border-y-4 px-5 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <ol className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {steps.map((step) => (
@@ -141,7 +141,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-card/50 px-5 py-16 sm:px-6 lg:px-8">
+      <section className="marketing-diagonal border-y-4 px-5 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
           <DemoMonitor />
         </div>

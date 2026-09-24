@@ -67,8 +67,8 @@ const questions = [
 export default function FaqPage() {
   return (
     <MarketingShell>
-      <section className="relative overflow-hidden px-5 pb-14 pt-16 sm:px-6 sm:pt-24 lg:px-8">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-accent opacity-10 blur-3xl" />
+      <section className="marketing-noise relative overflow-hidden border-b-4 px-5 pb-14 pt-16 sm:px-6 sm:pt-24 lg:px-8">
+        <div className="marketing-orb" aria-hidden="true" />
         <div className="relative mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             FAQ
@@ -83,7 +83,7 @@ export default function FaqPage() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-card/50 px-5 py-16 sm:px-6 lg:px-8">
+      <section className="marketing-grid border-y-4 px-5 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
           <div className="space-y-3">
             {questions.map((item) => (

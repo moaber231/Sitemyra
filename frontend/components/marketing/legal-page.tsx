@@ -23,7 +23,7 @@ export function LegalPage({
 }) {
   return (
     <MarketingShell>
-      <div className="mx-auto max-w-7xl px-5 py-14 sm:px-6 sm:py-20 lg:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20 lg:px-8">
         <header className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {eyebrow}
@@ -36,7 +36,7 @@ export function LegalPage({
           </p>
         </header>
 
-        <div className="mt-12 grid gap-10 lg:grid-cols-[13rem_minmax(0,46rem)] lg:gap-16">
+        <div className="marketing-grid mt-12 grid gap-10 border-t-2 border-border pt-10 lg:grid-cols-[13rem_minmax(0,46rem)] lg:gap-16">
           <aside className="lg:sticky lg:top-28 lg:self-start">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
               Policies

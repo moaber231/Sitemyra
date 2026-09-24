@@ -39,8 +39,8 @@ export default function AboutPage() {
     <MarketingShell>
       <StructuredData />
 
-      <section className="relative overflow-hidden px-5 pb-16 pt-16 sm:px-6 sm:pt-24 lg:px-8">
-        <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-accent opacity-10 blur-3xl" />
+      <section className="marketing-noise relative overflow-hidden border-b-4 px-5 pb-16 pt-16 sm:px-6 sm:pt-24 lg:px-8">
+        <div className="marketing-orb" aria-hidden="true" />
         <div className="relative mx-auto max-w-4xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             About Sitemyra
@@ -65,7 +65,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-card/50 px-5 py-16 sm:px-6 lg:px-8">
+      <section className="marketing-inverted border-y-4 px-5 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">

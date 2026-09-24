@@ -21,8 +21,8 @@ const notes = [
 export default function PricingPage() {
   return (
     <MarketingShell>
-      <section className="relative overflow-hidden px-5 pb-12 pt-16 sm:px-6 sm:pt-24 lg:px-8">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-accent opacity-10 blur-3xl" />
+      <section className="marketing-noise relative overflow-hidden border-b-4 px-5 pb-12 pt-16 sm:px-6 sm:pt-24 lg:px-8">
+        <div className="marketing-orb" aria-hidden="true" />
         <div className="relative mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             Pricing
@@ -41,7 +41,7 @@ export default function PricingPage() {
         <PricingSection showHeading={false} />
       </section>
 
-      <section className="border-y border-border bg-card/50 px-5 py-16 sm:px-6 lg:px-8">
+      <section className="marketing-grid border-y-4 px-5 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
             <HelpCircle size={22} className="text-accent" aria-hidden="true" />

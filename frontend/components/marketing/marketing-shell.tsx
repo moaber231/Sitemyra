@@ -11,10 +11,10 @@ export function MarketingShell({
   className?: string;
 }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="marketing-theme min-h-screen bg-background">
       <a
         href="#main-content"
-        className="sr-only absolute left-4 top-4 z-50 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-foreground focus:not-sr-only"
+        className="marketing-skip-link sr-only absolute left-4 top-4 z-50 px-3 py-2 focus:not-sr-only"
       >
         Skip to main content
       </a>

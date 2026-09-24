@@ -55,12 +55,12 @@ export function SiteFooter() {
   const contactEmail = getPublicContactEmail();
 
   return (
-    <footer className="border-t border-border bg-card/40">
-      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-6 lg:px-8">
+    <footer className="marketing-inverted border-t-4">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.35fr_2fr]">
           <div>
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-accent">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                 <ShieldCheck size={18} aria-hidden="true" />
               </span>
               <span className="font-semibold tracking-tight">Sitemyra</span>

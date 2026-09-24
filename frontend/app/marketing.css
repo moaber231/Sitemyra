@@ -1,0 +1,420 @@
+/*
+ * Public-site visual system: Minimalist Monochrome.
+ *
+ * This file is deliberately scoped to .marketing-theme. The authenticated
+ * dashboard keeps the existing dark design tokens and components.
+ */
+.marketing-theme {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #000000;
+  --muted: #f5f5f5;
+  --muted-foreground: #525252;
+  --accent: #000000;
+  --accent-foreground: #ffffff;
+  --border: #000000;
+  --input: #000000;
+  --ring: #000000;
+  --success: #000000;
+  --success-muted: #f5f5f5;
+  --warning: #000000;
+  --warning-muted: #f5f5f5;
+  --danger: #000000;
+  --danger-muted: #f5f5f5;
+  --radius: 0px;
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  color: #000000;
+  background-color: #ffffff;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 3px,
+      rgba(0, 0, 0, 0.018) 3px,
+      rgba(0, 0, 0, 0.018) 4px
+    );
+  font-family: var(--font-source-serif), Georgia, serif;
+  color-scheme: light;
+}
+
+.marketing-theme ::selection {
+  color: #ffffff;
+  background: #000000;
+}
+
+.marketing-theme h1,
+.marketing-theme h2,
+.marketing-theme h3,
+.marketing-theme h4 {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+.marketing-theme h1 {
+  line-height: 0.92;
+}
+
+.marketing-theme h2,
+.marketing-theme h3 {
+  line-height: 1;
+}
+
+.marketing-theme p,
+.marketing-theme li,
+.marketing-theme label,
+.marketing-theme input,
+.marketing-theme button {
+  font-family: var(--font-source-serif), Georgia, serif;
+}
+
+.marketing-theme .uppercase,
+.marketing-theme .font-mono,
+.marketing-theme .marketing-label {
+  font-family: var(--font-jetbrains), "Courier New", monospace;
+  letter-spacing: 0.14em;
+}
+
+.marketing-theme .marketing-display,
+.marketing-theme .font-display {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 0.88;
+}
+
+.marketing-theme .marketing-body-large {
+  font-family: var(--font-source-serif), Georgia, serif;
+  font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+  line-height: 1.45;
+}
+
+.marketing-theme .marketing-orb {
+  display: none;
+}
+
+/* The system has no radius, shadow, blur, or decorative color glow. */
+.marketing-theme [class*="rounded-"],
+.marketing-theme [class*="shadow-"] {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.marketing-theme .backdrop-blur,
+.marketing-theme .backdrop-blur-md,
+.marketing-theme .backdrop-blur-sm,
+.marketing-theme .backdrop-blur-xl {
+  backdrop-filter: none !important;
+}
+
+.marketing-theme .animate-apeiro-fade-up,
+.marketing-theme .animate-apeiro-pulse,
+.marketing-theme .animate-apeiro-pop,
+.marketing-theme .animate-apeiro-glow {
+  animation: none !important;
+}
+
+.marketing-theme *,
+.marketing-theme *::before,
+.marketing-theme *::after {
+  transition-duration: 100ms !important;
+  transition-timing-function: linear !important;
+}
+
+/* Reuse the existing primitives without allowing their dark-theme treatment
+ * to leak into the public surface. */
+.marketing-theme .apeiro-card {
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: none;
+}
+
+.marketing-theme .apeiro-card:hover {
+  border-color: var(--border);
+  background: var(--card);
+  transform: none;
+}
+
+.marketing-theme section.border-y {
+  border-top-width: 4px;
+  border-bottom-width: 4px;
+}
+
+.marketing-theme .apeiro-btn {
+  min-height: 44px;
+  border-radius: 0;
+  padding: 1rem 2rem;
+  border: 1px solid transparent;
+  font-family: var(--font-jetbrains), "Courier New", monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+.marketing-theme .apeiro-btn:hover {
+  transform: none;
+}
+
+.marketing-theme .apeiro-btn-primary {
+  color: #ffffff;
+  background: #000000;
+  border-color: #000000;
+  box-shadow: none;
+}
+
+.marketing-theme .apeiro-btn-primary:hover {
+  color: #000000;
+  background: #ffffff;
+  border-color: #000000;
+}
+
+.marketing-theme .apeiro-btn-outline,
+.marketing-theme .apeiro-btn-secondary {
+  color: #000000;
+  background: transparent;
+  border: 2px solid #000000;
+  box-shadow: none;
+}
+
+.marketing-theme .apeiro-btn-outline:hover,
+.marketing-theme .apeiro-btn-secondary:hover {
+  color: #ffffff;
+  background: #000000;
+  border-color: #000000;
+}
+
+.marketing-theme .apeiro-btn-ghost {
+  color: #000000;
+  background: transparent;
+  border-color: transparent;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.35em;
+}
+
+.marketing-theme .apeiro-btn-ghost:hover {
+  color: #ffffff;
+  background: #000000;
+  text-decoration: none;
+}
+
+.marketing-theme .apeiro-btn-accent {
+  color: #ffffff;
+  background: #000000;
+  border-color: #000000;
+}
+
+.marketing-theme .group:hover .apeiro-btn-primary {
+  color: #000000;
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.marketing-theme .group:hover .apeiro-btn-outline,
+.marketing-theme .group:hover .apeiro-btn-secondary {
+  color: #ffffff;
+  background: #000000;
+  border-color: #ffffff;
+}
+
+.marketing-theme .apeiro-badge {
+  border-radius: 0;
+  font-family: var(--font-jetbrains), "Courier New", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.marketing-theme :focus-visible {
+  outline: 3px solid #000000;
+  outline-offset: 3px;
+}
+
+.marketing-theme .apeiro-input {
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: none;
+}
+
+.marketing-theme .apeiro-input:focus {
+  border-width: 4px;
+  outline: none;
+  box-shadow: none;
+}
+
+/* Editorial surfaces and rules. */
+.marketing-theme .marketing-rule {
+  border-top: 4px solid #000000;
+}
+
+.marketing-theme .marketing-rule-light {
+  border-top: 1px solid #e5e5e5;
+}
+
+.marketing-theme .marketing-grid {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.marketing-theme .marketing-diagonal {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 40px,
+    rgba(0, 0, 0, 0.08) 40px,
+    rgba(0, 0, 0, 0.08) 42px
+  );
+}
+
+.marketing-theme .marketing-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+  background-blend-mode: multiply;
+}
+
+.marketing-theme .marketing-hero-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(100%, 18rem);
+}
+
+.marketing-theme .marketing-hero-mark::before {
+  content: "";
+  height: 4px;
+  flex: 1;
+  background: #000000;
+}
+
+.marketing-theme .marketing-hero-mark::after {
+  content: "";
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid #000000;
+  background: #ffffff;
+}
+
+.marketing-theme .marketing-inverted {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #000000;
+  --secondary-foreground: #ffffff;
+  --muted: #000000;
+  --muted-foreground: #e5e5e5;
+  --accent: #ffffff;
+  --accent-foreground: #000000;
+  --border: #ffffff;
+  --input: #ffffff;
+  --ring: #ffffff;
+  color: #ffffff;
+  background-color: #000000;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 3px,
+    rgba(255, 255, 255, 0.035) 3px,
+    rgba(255, 255, 255, 0.035) 4px
+  );
+}
+
+.marketing-theme .marketing-inverted .apeiro-card {
+  border-color: #ffffff;
+  background: #000000;
+  color: #ffffff;
+}
+
+.marketing-theme .marketing-inverted .apeiro-card:hover {
+  background: #ffffff;
+  color: #000000;
+}
+
+.marketing-theme .marketing-inverted .apeiro-btn-primary {
+  color: #000000;
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.marketing-theme .marketing-inverted .apeiro-btn-primary:hover {
+  color: #ffffff;
+  background: #000000;
+  border-color: #ffffff;
+}
+
+.marketing-theme .marketing-inverted .apeiro-btn-outline {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.marketing-theme .marketing-inverted .apeiro-btn-outline:hover {
+  color: #000000;
+  background: #ffffff;
+}
+
+.marketing-theme .marketing-inverted :focus-visible {
+  outline-color: #ffffff;
+}
+
+.marketing-theme .marketing-inverted .text-muted-foreground {
+  color: #e5e5e5;
+}
+
+.marketing-theme .marketing-inverted .marketing-rule {
+  border-color: #ffffff;
+}
+
+.marketing-theme .marketing-pullquote {
+  border-left: 4px solid currentColor;
+  padding-left: 1.5rem;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.75rem, 3vw, 3rem);
+  font-style: italic;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.marketing-theme .marketing-drop-cap::first-letter {
+  float: left;
+  margin: 0.15rem 0.6rem 0 0;
+  border: 2px solid #000000;
+  padding: 0.25rem 0.45rem 0.1rem;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 3.5rem;
+  line-height: 0.8;
+}
+
+.marketing-theme .marketing-skip-link {
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #000000;
+  color: #ffffff;
+  font-family: var(--font-jetbrains), "Courier New", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-theme * {
+    transition-duration: 0.01ms !important;
+  }
+}

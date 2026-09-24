@@ -11,17 +11,17 @@ const navigation = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex min-h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-5 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 border-b-2 bg-white">
+      <div className="mx-auto flex min-h-[4.5rem] max-w-6xl items-center justify-between gap-4 px-5 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="group flex shrink-0 items-center gap-2.5"
           aria-label="Sitemyra home"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-accent shadow-sm transition-transform duration-200 group-hover:rotate-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform duration-200 group-hover:rotate-3">
             <ShieldCheck size={19} aria-hidden="true" />
           </span>
-          <span className="text-lg font-semibold tracking-tight">Sitemyra</span>
+          <span className="marketing-display text-xl">Sitemyra</span>
         </Link>
 
         <nav
@@ -32,7 +32,7 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              className="border-b border-transparent px-2 py-2 font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-100 hover:border-black hover:text-black"
             >
               {item.label}
             </Link>
@@ -54,13 +54,13 @@ export function SiteHeader() {
             <Menu size={19} aria-hidden="true" />
             <span className="sr-only">Open navigation</span>
           </summary>
-          <div className="absolute right-0 top-12 z-50 w-64 max-w-[calc(100vw-2.5rem)] rounded-xl border border-border bg-card p-2 shadow-2xl">
+          <div className="absolute right-0 top-12 z-50 w-64 max-w-[calc(100vw-2.5rem)] border-2 border-black bg-white p-2">
             <nav aria-label="Mobile navigation" className="grid gap-1">
               {navigation.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  className="border-b border-border px-3 py-3 font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-100 hover:bg-black hover:text-white"
                 >
                   {item.label}
                 </Link>
