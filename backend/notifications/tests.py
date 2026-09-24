@@ -6,6 +6,7 @@ from monitors.models import Monitor, MonitorCheck
 
 from .models import NotificationEvent, NotificationPreference
 from .services import queue_notification, send_monitor_email
+from .tasks import send_weekly_digests
 
 
 class NotificationTests(TestCase):
@@ -84,3 +85,13 @@ class NotificationTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("Change detected", mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].to, ["notify@example.com"])
+
+    def test_weekly_digest_respects_opt_out(self):
+        NotificationPreference.objects.create(
+            user=self.user,
+            email_weekly_digest=False,
+        )
+
+        send_weekly_digests()
+
+        self.assertEqual(len(mail.outbox), 0)

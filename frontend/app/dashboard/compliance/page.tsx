@@ -51,8 +51,8 @@ export default function CompliancePage() {
           <FileCheck size={22} /> Export Compliance Report
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          One-click download of uptime, SLA metrics (99.9% target), failure and
-          change histories for your records — auditor-friendly CSV or PDF.
+          One-click download of uptime, response-time, failure, and change
+          histories for your records — auditor-friendly CSV or PDF.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">

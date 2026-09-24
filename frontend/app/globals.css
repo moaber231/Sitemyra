@@ -173,9 +173,23 @@ select:focus {
 }
 
 button:focus-visible,
-a:focus-visible {
+a:focus-visible,
+summary:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
+}
+
+summary {
+  cursor: pointer;
+}
+
+code {
+  overflow-wrap: anywhere;
+  border-radius: 0.35rem;
+  background: var(--secondary);
+  padding: 0.12rem 0.3rem;
+  color: var(--foreground);
+  font-size: 0.9em;
 }
 
 button,

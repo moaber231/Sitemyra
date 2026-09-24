@@ -330,6 +330,15 @@ elif EMAIL_FROM_NAME:
 else:
     DEFAULT_FROM_EMAIL = EMAIL_FROM_ADDRESS
 
+# Optional Reply-To for transactional notification and digest emails. Keep
+# this empty until a monitored, appropriate reply mailbox is verified; the
+# sender identity above remains controlled by EMAIL_FROM/EMAIL_FROM_NAME.
+EMAIL_REPLY_TO = [
+    address.strip()
+    for address in os.getenv("EMAIL_REPLY_TO", "").split(",")
+    if address.strip()
+]
+
 # Stripe / SSO (empty = disabled with loud 503s; Phase 1 safety).
 # Dev-only bypasses: STRIPE_DEV_STUB, STRIPE_DEV_SKIP_WEBHOOK_VERIFY —
 # honoured only when DEBUG is on. OAuth needs no bypass: unconfigured

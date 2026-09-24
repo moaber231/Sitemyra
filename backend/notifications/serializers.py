@@ -10,6 +10,7 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
             "email_on_change",
             "email_on_failure",
             "email_on_recovery",
+            "email_weekly_digest",
         )
 
 

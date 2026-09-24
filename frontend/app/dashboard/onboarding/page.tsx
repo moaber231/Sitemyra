@@ -116,11 +116,12 @@ export default function OnboardingPage() {
           Zero-to-touch onboarding
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-          Catch your first price change in 3 steps
+          Set up your first monitor in 3 steps
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Point Sitemyra at a competitor pricing page, pick price tracking,
-          and get a Slack or email alert the instant it moves.
+          Point Sitemyra at a competitor pricing page, choose a monitoring
+          mode, and get a Slack or email alert when a scheduled check finds a
+          change.
         </p>
         <Steps current={done ? 4 : step} />
 

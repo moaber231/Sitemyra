@@ -4,11 +4,14 @@ from datetime import timedelta
 from celery import shared_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.db.models import Avg, Count, Q
 from django.utils import timezone
 
-from .services import TransientDeliveryError, send_monitor_email
+from .services import (
+    TransientDeliveryError,
+    _send_transactional_email,
+    send_monitor_email,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -134,9 +137,12 @@ def send_weekly_digests():
         price_last[monitor_id] = (price, currency)
 
     # Flat pass 4: users (same query as before, streamed).
-    for user in User.objects.filter(is_active=True).iterator(
-        chunk_size=500
-    ):
+    eligible_users = User.objects.filter(
+        Q(notification_preferences__isnull=True)
+        | Q(notification_preferences__email_weekly_digest=True),
+        is_active=True,
+    ).distinct()
+    for user in eligible_users.iterator(chunk_size=500):
         entries = monitors_by_user.get(user.id)
         if not entries:
             continue
@@ -164,15 +170,15 @@ def send_weekly_digests():
             f"Hi {user.email},\n\nYour Sitemyra weekly digest "
             f"({week_ago.date()} -> {now.date()}):\n\n"
             + "\n".join(lines)
+            + "\n\nManage email preferences: "
+            + f"{settings.FRONTEND_URL.rstrip('/')}/dashboard/settings#alerts"
             + "\n\nHappy monitoring,\nSitemyra"
         )
         try:
-            send_mail(
+            _send_transactional_email(
                 subject="Sitemyra: Your weekly monitoring digest",
                 message=body,
-                from_email=None,
-                recipient_list=[user.email],
-                fail_silently=False,
+                recipient=user.email,
             )
             sent += 1
         except Exception:

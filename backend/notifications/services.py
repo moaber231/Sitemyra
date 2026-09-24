@@ -19,8 +19,10 @@ import smtplib
 import time
 from urllib.parse import urlparse
 
+from django.conf import settings
 from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
+from django.utils.html import escape
 
 from .models import (
     AlertChannel,
@@ -112,13 +114,17 @@ def _record_event(monitor, check, event_type):
 
 
 def _build_subject_message(monitor, check, event_type):
+    dashboard_url = (
+        f"{settings.FRONTEND_URL.rstrip('/')}/dashboard/monitors/{monitor.id}"
+    )
     if event_type == NotificationEvent.CHANGE:
         subject = f"Sitemyra: Change detected — {monitor.name}"
         message = (
             f"A change was detected on {monitor.name}.\n\n"
             f"URL: {monitor.url}\n"
             f"Checked: {check.checked_at}\n"
-            f"Status: {check.status_code}\n"
+            f"Status: {check.status_code}\n\n"
+            f"Review this monitor in Sitemyra: {dashboard_url}\n"
         )
     elif event_type == NotificationEvent.FAILURE:
         subject = f"Sitemyra: Monitor failing — {monitor.name}"
@@ -127,7 +133,8 @@ def _build_subject_message(monitor, check, event_type):
             f"Monitor: {monitor.name}\n"
             f"URL: {monitor.url}\n"
             f"Checked: {check.checked_at}\n"
-            f"Error: {check.error}\n"
+            f"Error: {check.error}\n\n"
+            f"Review this monitor in Sitemyra: {dashboard_url}\n"
         )
     else:
         subject = f"Sitemyra: Monitor recovered — {monitor.name}"
@@ -136,9 +143,50 @@ def _build_subject_message(monitor, check, event_type):
             f"Monitor: {monitor.name}\n"
             f"URL: {monitor.url}\n"
             f"Checked: {check.checked_at}\n"
-            f"Status: {check.status_code}\n"
+            f"Status: {check.status_code}\n\n"
+            f"Review this monitor in Sitemyra: {dashboard_url}\n"
         )
     return subject, message
+
+
+def _transactional_html(subject, message):
+    """Build a small, escaped HTML alternative for notification email."""
+    dashboard_url = escape(f"{settings.FRONTEND_URL.rstrip('/')}/dashboard")
+    safe_subject = escape(subject)
+    safe_message = escape(message).replace("\n", "<br />")
+    return (
+        "<!doctype html><html><body style=\"margin:0;background:#080c14;"
+        "color:#e2e8f0;font-family:Arial,sans-serif\">"
+        "<div style=\"max-width:640px;margin:0 auto;padding:32px\">"
+        "<p style=\"color:#c8ef72;font-weight:700;letter-spacing:1px\">"
+        "SITEMYRA</p>"
+        f"<h1 style=\"font-size:24px;line-height:1.25\">{safe_subject}</h1>"
+        f"<div style=\"font-size:15px;line-height:1.7\">{safe_message}</div>"
+        f"<p style=\"margin-top:28px;font-size:13px;color:#94a3b8\">"
+        f"<a href=\"{dashboard_url}\" style=\"color:#c8ef72\">Open your dashboard</a>"
+        "</p></div></body></html>"
+    )
+
+
+def _send_transactional_email(*, subject, message, recipient):
+    """Send text + HTML with the verified sender identity and optional Reply-To.
+
+    Reply-To is opt-in because the transactional sender may not be the best
+    public support mailbox. No SMTP credential or provider secret is exposed
+    to the frontend.
+    """
+    kwargs = {
+        "subject": subject,
+        "message": message,
+        "html_message": _transactional_html(subject, message),
+        "from_email": None,
+        "recipient_list": [recipient],
+        "fail_silently": False,
+    }
+    reply_to = getattr(settings, "EMAIL_REPLY_TO", [])
+    if reply_to:
+        kwargs["reply_to"] = reply_to
+    return send_mail(**kwargs)
 
 
 def _email_enabled(user, event_type) -> bool:
@@ -391,12 +439,10 @@ def send_owner_email(monitor, subject, message) -> dict:
                 "error": "Monitor owner has no email address.",
                 "attempts": 0, "permanent": True}
     try:
-        send_mail(
+        _send_transactional_email(
             subject=subject,
             message=message,
-            from_email=None,
-            recipient_list=[recipient],
-            fail_silently=False,
+            recipient=recipient,
         )
     except (smtplib.SMTPRecipientsRefused, smtplib.SMTPSenderRefused) as exc:
         _log_safe("warning", "email_rejected", monitor, None, "")
@@ -414,9 +460,10 @@ def send_owner_email(monitor, subject, message) -> dict:
         if transient:
             try:
                 time.sleep(RETRY_BACKOFF_BASE_SECONDS)
-                send_mail(
-                    subject=subject, message=message, from_email=None,
-                    recipient_list=[recipient], fail_silently=False,
+                _send_transactional_email(
+                    subject=subject,
+                    message=message,
+                    recipient=recipient,
                 )
                 _log_safe("info", "email_delivered_retry", monitor, None, "")
                 return {"ok": True, "status": "delivered", "error": "",

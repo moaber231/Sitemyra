@@ -216,6 +216,8 @@ def _legacy_send_weekly_digests():
             f"Hi {user.email},\n\nYour Sitemyra weekly digest "
             f"({week_ago.date()} -> {now.date()}):\n\n"
             + "\n".join(lines)
+            + "\n\nManage email preferences: "
+            + f"{settings.FRONTEND_URL.rstrip('/')}/dashboard/settings#alerts"
             + "\n\nHappy monitoring,\nSitemyra"
         )
         try:

@@ -3,123 +3,125 @@ import {
   ArrowRight,
   BellRing,
   Check,
-  DollarSign,
-  Hash,
-  KeyRound,
+  Code2,
+  ExternalLink,
+  FileSearch,
+  Globe2,
+  LayoutDashboard,
   Mail,
   MessageCircle,
   ScanSearch,
   ShieldCheck,
+  Users,
   Webhook,
+  Zap,
 } from "lucide-react";
 
-const CHANNELS = [
-  { icon: <Hash size={16} />, label: "Slack Webhooks" },
-  { icon: <MessageCircle size={16} />, label: "Discord Webhooks" },
-  { icon: <Webhook size={16} />, label: "Generic Webhooks" },
-  { icon: <Mail size={16} />, label: "Email Alerts" },
-  { icon: <KeyRound size={16} />, label: "Developer API Keys" },
+import { DemoMonitor } from "@/components/marketing/demo-monitor";
+import { MarketingShell } from "@/components/marketing/marketing-shell";
+import { PricingSection } from "@/components/marketing/pricing-section";
+import { StructuredData } from "@/components/marketing/structured-data";
+import { marketingMetadata } from "@/lib/marketing-seo";
+
+export const metadata = marketingMetadata({
+  title: "Sitemyra — Know when your competitors change.",
+  description:
+    "Sitemyra monitors competitor pricing, pages, and content automatically and alerts you when something changes.",
+  path: "/",
+});
+
+const workflow = [
+  {
+    number: "01",
+    title: "Add a competitor page",
+    text: "Choose a public pricing, product, or content page you want to keep an eye on.",
+  },
+  {
+    number: "02",
+    title: "Sitemyra checks it",
+    text: "Scheduled checks compare the page using the monitoring mode you choose.",
+  },
+  {
+    number: "03",
+    title: "Get alerted",
+    text: "Review the change in your dashboard and receive an email or webhook alert.",
+  },
 ];
 
-const TIERS = [
+const capabilities = [
   {
-    name: "Free",
-    price: "$0",
-    cadence: "forever",
-    cta: "Start for free",
-    featured: false,
-    features: [
-      "3 Monitors",
-      "15-min checks",
-      "HTTP content monitoring",
-      "Email alerts",
-      "7-day retention",
-    ],
+    icon: FileSearch,
+    title: "Content changes",
+    text: "Use HTTP checks to notice meaningful content changes and record the response status for review.",
   },
   {
-    name: "Pro",
-    price: "$19",
-    cadence: "/mo",
-    cta: "Upgrade to Pro",
-    featured: true,
-    features: [
-      "25 Monitors",
-      "5-min checks",
-      "Visual & DOM diffing",
-      "Price tracking",
-      "Slack & Discord alerts",
-      "30-day retention",
-    ],
+    icon: Code2,
+    title: "DOM changes",
+    text: "Compare selected page structure when you need a closer look at what changed.",
   },
   {
-    name: "Business",
-    price: "$49",
-    cadence: "/mo",
-    cta: "Upgrade to Business",
-    featured: false,
-    features: [
-      "100 Monitors",
-      "1-min checks",
-      "Unlimited webhooks",
-      "Team Workspaces (3 seats)",
-      "Compliance PDF/CSV exports",
-      "90-day retention",
-    ],
+    icon: ScanSearch,
+    title: "Visual changes",
+    text: "Capture screenshots and review visual differences on supported plans.",
   },
+  {
+    icon: Zap,
+    title: "Price changes",
+    text: "Track a selected price value and get a clear before-and-after example.",
+  },
+];
+
+const audiences = [
+  {
+    icon: Globe2,
+    title: "SaaS companies",
+    text: "Keep an eye on competitor pricing pages and product messaging.",
+  },
+  {
+    icon: LayoutDashboard,
+    title: "E-commerce businesses",
+    text: "Watch product and pricing pages that matter to your customers.",
+  },
+  {
+    icon: Users,
+    title: "Digital and SEO agencies",
+    text: "Monitor a focused watchlist for multiple clients or projects.",
+  },
+  {
+    icon: FileSearch,
+    title: "Marketing and research teams",
+    text: "Catch landing-page, offer, and content changes without manual checks.",
+  },
+];
+
+const channels = [
+  { icon: Mail, label: "Email alerts" },
+  { icon: BellRing, label: "Slack" },
+  { icon: MessageCircle, label: "Discord" },
+  { icon: Webhook, label: "Generic webhooks" },
+  { icon: Code2, label: "Developer API keys" },
 ];
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-background">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
-        <Link href="/" className="group flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-accent shadow-sm transition-transform duration-200 group-hover:rotate-3">
-            <ShieldCheck size={19} />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">
-            Sitemyra
-          </span>
-        </Link>
+    <MarketingShell>
+      <StructuredData />
 
-        <div className="flex items-center gap-2">
-          <Link
-            href="/login"
-            className="apeiro-btn apeiro-btn-ghost"
-          >
-            Sign in
-          </Link>
-
-          <Link
-            href="/register"
-            className="apeiro-btn apeiro-btn-primary"
-          >
-            Start monitoring
-            <ArrowRight size={15} />
-          </Link>
-        </div>
-      </nav>
-
-      <section className="relative mx-auto max-w-7xl px-5 pb-20 pt-14 sm:px-6 sm:pt-20 lg:px-8 lg:pb-28 lg:pt-28">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-accent opacity-15 blur-[100px]" />
-
+      <section className="relative overflow-hidden px-5 pb-20 pt-16 sm:px-6 sm:pt-24 lg:px-8 lg:pb-28 lg:pt-28">
+        <div className="pointer-events-none absolute left-1/2 top-0 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-accent opacity-15 blur-[110px]" />
         <div className="relative mx-auto max-w-4xl text-center">
           <div className="animate-apeiro-fade-up inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-3.5 py-1.5 text-xs font-semibold shadow-sm backdrop-blur">
-            <span className="h-1.5 w-1.5 animate-apeiro-pulse rounded-full bg-success" />
-            Competitor &amp; website monitoring
+            <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
+            Competitor and website monitoring
           </div>
 
-          <h1 className="animate-apeiro-fade-up mt-7 text-5xl font-semibold tracking-[-0.045em] sm:text-6xl lg:text-7xl">
-            Know the instant your competitors change their{" "}
-            <span className="relative mx-2 inline-block">
-              pricing or page content.
-              <span className="absolute -bottom-1 left-0 right-0 -z-10 h-3 rounded-full bg-accent opacity-70" />
-            </span>
+          <h1 className="animate-apeiro-fade-up mt-7 text-5xl font-semibold tracking-[-0.05em] sm:text-6xl lg:text-7xl">
+            Know when your competitors change.
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Sitemyra watches competitor pricing pages and the content that
-            matters to you — then fires a Slack or email alert the moment
-            something moves. Set it once. Never miss a price change again.
+            Monitor competitor pricing, pages, and content automatically. Get
+            alerted when something changes.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -127,295 +129,240 @@ export default function HomePage() {
               href="/register"
               className="apeiro-btn apeiro-btn-primary w-full !py-3 sm:w-auto"
             >
-              Start monitoring for free
-              <ArrowRight size={17} />
+              Start monitoring free
+              <ArrowRight size={17} aria-hidden="true" />
             </Link>
-
             <Link
-              href="/login"
+              href="/how-it-works"
               className="apeiro-btn apeiro-btn-outline w-full !py-3 sm:w-auto"
             >
-              Sign in
+              See how it works
             </Link>
           </div>
 
-          <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+          <div className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <Check size={13} className="text-success" />
-              No credit card
+              <Check size={13} className="text-success" aria-hidden="true" />
+              Free plan available
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <Check size={13} className="text-success" />
-              Price tracking included
+              <Check size={13} className="text-success" aria-hidden="true" />
+              No credit card to start
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <Check size={13} className="text-success" />
-              Slack &amp; email alerts
+              <Check size={13} className="text-success" aria-hidden="true" />
+              Publicly accessible pages
             </span>
           </div>
         </div>
 
         <div className="relative mx-auto mt-16 max-w-5xl">
-          <div className="apeiro-card overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-border px-5 py-3">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#ef8c8c]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#e5c46c]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#8bc98e]" />
-              <div className="ml-3 h-7 flex-1 rounded-md bg-muted" />
-            </div>
+          <DemoMonitor />
+        </div>
+      </section>
 
-            <div className="grid gap-0 lg:grid-cols-2">
-              <div className="border-b border-border p-6 sm:p-8 lg:border-b-0 lg:border-r">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    PRICE CHANGE DETECTED
-                  </p>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-muted px-2.5 py-1 text-xs font-semibold text-danger">
-                    <span className="h-1.5 w-1.5 animate-apeiro-pulse rounded-full bg-danger" />
-                    Live
-                  </span>
-                </div>
+      <section
+        id="how-it-works"
+        className="scroll-mt-24 border-y border-border bg-card/50 px-5 py-20 sm:px-6 lg:px-8"
+        aria-labelledby="workflow-heading"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              A simple workflow
+            </p>
+            <h2
+              id="workflow-heading"
+              className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl"
+            >
+              Set it once. See the signal when it matters.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Sitemyra is designed for a focused job: notice meaningful changes
+              on pages you choose.
+            </p>
+          </div>
 
-                <p className="mt-2 text-sm font-medium">
-                  Competitor pricing — competitor.com/pricing
+          <ol className="mx-auto mt-10 grid max-w-5xl gap-4 md:grid-cols-3">
+            {workflow.map((step) => (
+              <li key={step.number} className="apeiro-card p-6">
+                <span className="text-sm font-semibold tabular-nums text-accent">
+                  {step.number}
+                </span>
+                <h3 className="mt-5 text-lg font-semibold">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {step.text}
                 </p>
+              </li>
+            ))}
+          </ol>
 
-                <div className="mt-4 flex items-end gap-3">
-                  <span className="text-2xl font-semibold tabular-nums text-muted-foreground line-through">
-                    €49
-                  </span>
-                  <ArrowRight size={18} className="mb-1 text-muted-foreground" />
-                  <span className="text-4xl font-semibold tabular-nums text-success">
-                    €59
-                  </span>
-                  <span className="mb-1 rounded-full bg-warning-muted px-2 py-0.5 text-xs font-semibold text-warning">
-                    +20.4%
-                  </span>
-                </div>
-
-                <div className="mt-4 rounded-xl border border-border bg-secondary/40 p-3 font-mono text-xs leading-6">
-                  <p>
-                    <span className="mr-2 select-none font-semibold text-rose-400">
-                      −
-                    </span>
-                    <span className="text-rose-300">
-                      &lt;span class=&quot;price&quot;&gt;€49&lt;/span&gt;
-                    </span>
-                  </p>
-                  <p>
-                    <span className="mr-2 select-none font-semibold text-emerald-400">
-                      +
-                    </span>
-                    <span className="text-emerald-300">
-                      &lt;span class=&quot;price&quot;&gt;€59&lt;/span&gt;
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4 bg-muted/30 p-6 sm:p-8">
-                <p className="text-xs font-medium text-muted-foreground">
-                  ALERTS FIRED INSTANTLY
-                </p>
-
-                <div className="rounded-xl border border-border bg-card p-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/15 text-sky-300">
-                      <Hash size={15} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold">Slack — #pricing</p>
-                      <p className="text-xs text-muted-foreground">
-                        webhook · just now
-                      </p>
-                    </div>
-                  </div>
-                  <p className="mt-3 rounded-lg bg-muted/60 px-3 py-2.5 text-sm leading-6">
-                    <DollarSign size={13} className="mr-1 inline text-success" />
-                    Price changed from <strong>€49</strong> to{" "}
-                    <strong>€59 EUR</strong> on Competitor pricing.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-border bg-card p-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300">
-                      <Mail size={15} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold">
-                        Email — you@company.com
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        alert · just now
-                      </p>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-sm font-medium">
-                    Sitemyra: Price changed — Competitor pricing
-                  </p>
-                  <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                    The tracked price moved €49 → €59. Review the diff in
-                    your dashboard.
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="mt-8 text-center">
+            <Link
+              href="/how-it-works"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-foreground underline decoration-border underline-offset-4 transition hover:text-accent"
+            >
+              See the monitoring modes and examples
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-border bg-card">
-        <div className="mx-auto max-w-7xl px-5 py-14 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Alerts go where your team already works
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {CHANNELS.map((channel) => (
-              <span
-                key={channel.label}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-2 text-sm font-medium"
-              >
-                {channel.icon}
-                {channel.label}
-              </span>
+      <section
+        id="features"
+        className="scroll-mt-24 px-5 py-20 sm:px-6 lg:px-8"
+        aria-labelledby="features-heading"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              What you can monitor
+            </p>
+            <h2
+              id="features-heading"
+              className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl"
+            >
+              Choose the level of detail that fits the question.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              The available mode and check frequency depend on your plan. Start
+              with a simple content check, then add depth when you need it.
+            </p>
+          </div>
+
+          <div className="mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-2">
+            {capabilities.map((capability) => (
+              <div key={capability.title} className="apeiro-card p-6">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-accent">
+                  <capability.icon size={19} aria-hidden="true" />
+                </span>
+                <h3 className="mt-5 font-semibold">{capability.title}</h3>
+                <p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
+                  {capability.text}
+                </p>
+              </div>
             ))}
           </div>
         </div>
-        <div className="mx-auto grid max-w-7xl gap-px bg-border sm:grid-cols-3">
-          <Feature
-            icon={<DollarSign size={19} />}
-            title="Competitor price tracking"
-            text="Point Sitemyra at any pricing page. Get alerted the instant a price moves."
-          />
-          <Feature
-            icon={<ScanSearch size={19} />}
-            title="Visual & DOM diffing"
-            text="Screenshots and content diffs show exactly what changed on the page."
-          />
-          <Feature
-            icon={<BellRing size={19} />}
-            title="Slack, Discord & email alerts"
-            text="Route alerts to Slack, Discord, any webhook, or email — plus API keys for automation."
-          />
+      </section>
+
+      <section className="border-y border-border bg-card px-5 py-16 sm:px-6 lg:px-8" aria-labelledby="alerts-heading">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Notifications
+              </p>
+              <h2 id="alerts-heading" className="mt-2 text-3xl font-semibold tracking-tight">
+                Put the alert where you will see it.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-6 text-muted-foreground">
+              Sitemyra supports owner email alerts plus the destinations you
+              configure. There is no need to check every page by hand.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {channels.map((channel) => (
+              <div key={channel.label} className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 px-4 py-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-card text-accent">
+                  <channel.icon size={17} aria-hidden="true" />
+                </span>
+                <span className="text-sm font-medium">{channel.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Pricing
-          </p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Start free. Upgrade when pricing intel pays for itself.
+      <section className="px-5 py-20 sm:px-6 lg:px-8" aria-labelledby="audiences-heading">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Who it is for
+            </p>
+            <h2 id="audiences-heading" className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+              A useful watchlist for teams that need to stay informed.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Sitemyra is intended for small teams, agencies, and businesses
+              that want a focused view of important pages.
+            </p>
+          </div>
+
+          <div className="mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {audiences.map((audience) => (
+              <div key={audience.title} className="apeiro-card p-5">
+                <audience.icon size={19} className="text-accent" aria-hidden="true" />
+                <h3 className="mt-4 text-sm font-semibold">{audience.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {audience.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-card/50 px-5 py-20 sm:px-6 lg:px-8">
+        <PricingSection />
+      </section>
+
+      <section className="px-5 py-20 sm:px-6 lg:px-8" aria-labelledby="founder-heading">
+        <div className="mx-auto grid max-w-6xl gap-8 rounded-2xl border border-border bg-secondary/30 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center lg:p-10">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Built independently in Greece
+            </p>
+            <h2 id="founder-heading" className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Real product. Real founder. Early-stage and transparent.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Sitemyra started as an independent project by Konstantinos
+              Gkogkos, a student developer in Greece. The goal is simple: make
+              competitor monitoring accessible to smaller businesses without
+              pretending to be a large company.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-4 text-sm font-semibold">
+              <Link href="/about" className="underline underline-offset-4 hover:text-accent">
+                Read the founder story
+              </Link>
+              <a
+                href="https://github.com/moaber231"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 underline underline-offset-4 hover:text-accent"
+              >
+                <ExternalLink size={15} aria-hidden="true" />
+                View GitHub
+              </a>
+            </div>
+          </div>
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-xl font-semibold text-accent shadow-lg">
+            KG
+            <span className="sr-only">Konstantinos Gkogkos</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-20 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl">
+          <ShieldCheck size={28} className="mx-auto text-accent" aria-hidden="true" />
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Stop checking competitor pages manually.
           </h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            One caught competitor price change covers months of Pro. No
-            credit card to start.
+            Start with the Free plan and build a watchlist that gives you a
+            clearer view of the market.
           </p>
-        </div>
-
-        <div className="mx-auto mt-10 grid max-w-5xl gap-4 lg:grid-cols-3">
-          {TIERS.map((tier) => (
-            <div
-              key={tier.name}
-              className={`apeiro-card flex flex-col p-6 ${
-                tier.featured
-                  ? "border-accent shadow-[0_0_0_2px_color-mix(in_srgb,var(--accent)_40%,transparent)]"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold uppercase tracking-wide">
-                  {tier.name}
-                </h3>
-                {tier.featured && (
-                  <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
-                    Most popular
-                  </span>
-                )}
-              </div>
-              <p className="mt-3">
-                <span className="text-4xl font-semibold tracking-tight tabular-nums">
-                  {tier.price}
-                </span>
-                <span className="ml-1 text-sm text-muted-foreground">
-                  {tier.cadence}
-                </span>
-              </p>
-              <ul className="mt-5 flex-1 space-y-2.5 text-sm">
-                {tier.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2">
-                    <Check
-                      size={15}
-                      className="mt-0.5 shrink-0 text-success"
-                    />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/register"
-                className={`apeiro-btn mt-6 w-full ${
-                  tier.featured
-                    ? "apeiro-btn-primary"
-                    : "apeiro-btn-outline"
-                }`}
-              >
-                {tier.cta}
-                <ArrowRight size={15} />
-              </Link>
-            </div>
-          ))}
+          <Link href="/register" className="apeiro-btn apeiro-btn-primary mt-7">
+            Create your free account
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
         </div>
       </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20 text-center sm:px-6 lg:px-8">
-        <p className="text-sm font-medium text-muted-foreground">
-          Ready to stop checking competitor pages manually?
-        </p>
-
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-          Catch the next price change first.
-        </h2>
-
-        <Link
-          href="/register"
-          className="apeiro-btn apeiro-btn-primary mt-6"
-        >
-          Create your free account
-          <ArrowRight size={16} />
-        </Link>
-      </section>
-
-      <footer className="border-t border-border px-5 py-7 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Sitemyra. Know the instant
-        competitors change pricing or page content.
-      </footer>
-    </main>
-  );
-}
-
-function Feature({
-  icon,
-  title,
-  text,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="bg-card px-6 py-8 text-center">
-      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground">
-        {icon}
-      </div>
-
-      <h3 className="mt-4 text-sm font-semibold">{title}</h3>
-
-      <p className="mx-auto mt-1.5 max-w-xs text-sm leading-6 text-muted-foreground">
-        {text}
-      </p>
-    </div>
+    </MarketingShell>
   );
 }

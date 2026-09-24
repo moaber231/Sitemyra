@@ -24,14 +24,19 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# NEXT_PUBLIC_* values are inlined at build time — pass via --build-arg
-# (compose does this from BACKEND_PUBLIC_URL; see docker-compose.prod.yml).
+# NEXT_PUBLIC_* values are inlined at build time — pass public site/contact
+# values via --build-arg (compose wires these; see docker-compose.prod.yml).
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ARG NEXT_PUBLIC_CONTACT_EMAIL=
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
+    NEXT_PUBLIC_CONTACT_EMAIL=$NEXT_PUBLIC_CONTACT_EMAIL
 
 RUN npm run build
 

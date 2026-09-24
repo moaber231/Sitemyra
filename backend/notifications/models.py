@@ -15,6 +15,7 @@ class NotificationPreference(models.Model):
     email_on_change = models.BooleanField(default=True)
     email_on_failure = models.BooleanField(default=True)
     email_on_recovery = models.BooleanField(default=True)
+    email_weekly_digest = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

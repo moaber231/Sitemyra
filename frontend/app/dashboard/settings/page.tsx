@@ -20,6 +20,7 @@ const defaults: NotificationPreferences = {
   email_on_change: true,
   email_on_failure: true,
   email_on_recovery: true,
+  email_weekly_digest: true,
 };
 
 const PREFERENCES: {
@@ -41,6 +42,11 @@ const PREFERENCES: {
     key: "email_on_recovery",
     title: "Monitor recovery",
     description: "Notify me when a failed monitor recovers.",
+  },
+  {
+    key: "email_weekly_digest",
+    title: "Weekly monitoring digest",
+    description: "Receive a weekly summary of checks, uptime, latency, and price drift.",
   },
 ];
 

@@ -6,6 +6,8 @@ services:
     command: npm run dev
     environment:
       NEXT_PUBLIC_API_URL: ${BACKEND_URL:-http://localhost:8000}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-}
       WATCHPACK_POLLING: "true"
     ports:
       - "3000:3000"
@@ -38,6 +40,7 @@ services:
       EMAIL_USE_TLS: ${EMAIL_USE_TLS:-}
       EMAIL_USE_SSL: ${EMAIL_USE_SSL:-}
       EMAIL_FROM: ${EMAIL_FROM:-alerts@example.com}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
       ARTIFACT_STORAGE: ${ARTIFACT_STORAGE:-local}
       AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
       AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-}
@@ -119,6 +122,7 @@ services:
       EMAIL_USE_TLS: ${EMAIL_USE_TLS:-}
       EMAIL_USE_SSL: ${EMAIL_USE_SSL:-}
       EMAIL_FROM: ${EMAIL_FROM:-alerts@example.com}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
       ARTIFACT_STORAGE: ${ARTIFACT_STORAGE:-local}
       AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
       AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-}

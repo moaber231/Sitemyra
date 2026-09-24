@@ -6,7 +6,7 @@ export default function NotFound() {
     <main className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="animate-apeiro-fade-up text-center">
         <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
-          <ShieldQuestion size={24} />
+          <ShieldQuestion size={24} aria-hidden="true" />
         </div>
 
         <p className="text-sm font-medium text-muted-foreground">404</p>
@@ -20,11 +20,11 @@ export default function NotFound() {
         </p>
 
         <Link
-          href="/dashboard"
+          href="/"
           className="apeiro-btn apeiro-btn-primary mt-6"
         >
-          <ArrowLeft size={16} />
-          Back to dashboard
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to homepage
         </Link>
       </div>
     </main>

@@ -432,7 +432,7 @@ export default function MonitorDetailPage({
             <a
               href={currentMonitor.url}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="mt-2 inline-flex max-w-full items-center gap-1.5 truncate text-sm text-slate-400 transition-colors duration-200 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 rounded"
             >
               <span className="truncate">{currentMonitor.url}</span>
