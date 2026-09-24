@@ -99,6 +99,20 @@ class Monitor(models.Model):
         ]
 
     @property
+    def latest_check(self):
+        """Most recent check — served from the list prefetch when the
+        queryset attached one (plan D9 kills the per-monitor query);
+        falls back to the old query for single-object paths that never
+        prefetch (detail views, exports, task code).
+        """
+        cached = getattr(self, "latest_check_preview", None)
+
+        if cached is not None:
+            return cached[0] if cached else None
+
+        return self.checks.order_by("-checked_at").first()
+
+    @property
     def status(self):
         if not self.active:
             return "paused"
@@ -106,7 +120,7 @@ class Monitor(models.Model):
         if not self.last_checked_at:
             return "never_checked"
 
-        latest_check = self.checks.order_by("-checked_at").first()
+        latest_check = self.latest_check
 
         if not latest_check:
             return "never_checked"
@@ -168,6 +182,12 @@ class MonitorCheck(models.Model):
             ),
             models.Index(
                 fields=["monitor", "changed"],
+            ),
+            # Phase E (plan D9): admin metrics / digest / retention
+            # scans filter and sort on checked_at alone (was a full
+            # sequential scan of the largest table).
+            models.Index(
+                fields=["checked_at"],
             ),
         ]
 

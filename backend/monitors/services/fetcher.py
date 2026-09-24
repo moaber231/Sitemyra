@@ -32,6 +32,14 @@ class FetchResult:
 def _is_blocked_ip(ip: str) -> bool:
     address = ipaddress.ip_address(ip)
 
+    # IPv4-mapped IPv6 (::ffff:127.0.0.1, ::ffff:10.0.0.1, ...) must be
+    # judged by its INNER IPv4 address: the is_* flags on an IPv6Address
+    # do not consult the mapping on all Python versions, which would
+    # re-open the loopback/private bypass.
+    mapped = getattr(address, "ipv4_mapped", None)
+    if mapped is not None:
+        address = mapped
+
     return (
         address.is_loopback
         or address.is_private
@@ -91,7 +99,17 @@ def _resolve_and_validate_host(hostname: str) -> None:
             raise SecurityError("Blocked destination.")
 
 
-def validate_url(url: str) -> None:
+def validate_url_structure(url: str):
+    """Static (DNS-free) URL checks shared by the HTTP engine and the
+    browser request interceptor: scheme, host, credentials, port.
+
+    Returns the parsed URL; raises SecurityError on any violation.
+
+    NOTE: ``urlparse().port`` raises ``ValueError`` for out-of-range
+    ports (e.g. ``:99999``). That must surface as a SecurityError here —
+    an unhandled ValueError used to escape both engines and crash the
+    monitor task instead of recording a blocked destination.
+    """
     parsed = urlparse(url)
 
     if parsed.scheme.lower() not in {"http", "https"}:
@@ -103,9 +121,19 @@ def validate_url(url: str) -> None:
     if parsed.username or parsed.password:
         raise SecurityError("URLs containing credentials are not supported.")
 
-    if parsed.port is not None and parsed.port not in {80, 443}:
+    try:
+        port = parsed.port
+    except ValueError:
+        raise SecurityError("Invalid URL port.")
+
+    if port is not None and port not in {80, 443}:
         raise SecurityError("Only ports 80 and 443 are supported.")
 
+    return parsed
+
+
+def validate_url(url: str) -> None:
+    parsed = validate_url_structure(url)
     _resolve_and_validate_host(parsed.hostname)
 
 

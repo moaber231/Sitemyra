@@ -1,7 +1,7 @@
 import csv
 import io
 
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, Prefetch, Q
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import permissions, status, viewsets
@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from billing.models import get_plan_for_user, plan_limits
 from workspaces.permissions import require_role, user_role_in_workspace
 
-from .models import Monitor
+from .models import Monitor, MonitorCheck
 from .serializers import MonitorCheckSerializer, MonitorSerializer
 from .tasks import check_monitor
 
@@ -24,7 +24,16 @@ class MonitorViewSet(viewsets.ModelViewSet):
         user = self.request.user
         # API-key auth: scope to key's workspace when present.
         api_key = getattr(self.request, "api_key", None)
-        qs = Monitor.objects.select_related("user", "workspace")
+        qs = Monitor.objects.select_related("user", "workspace").prefetch_related(
+            # Plan D9: the latest check arrives as ONE extra query for
+            # the whole page — Monitor.status and last_response_time_ms
+            # are both served from it (was 2 queries per monitor).
+            Prefetch(
+                "checks",
+                queryset=MonitorCheck.objects.order_by("-checked_at")[:1],
+                to_attr="latest_check_preview",
+            )
+        )
         if api_key is not None and api_key.workspace_id:
             return qs.filter(workspace_id=api_key.workspace_id)
         if user.is_superuser:

@@ -1,0 +1,14 @@
+# Browser-worker-only dependencies (Docker target `browser`).
+# The API image never installs these — no Playwright, Pillow, pixelmatch
+# or Chromium in the API/HTTP-worker containers (OPTIMIZATION-PLAN D1).
+-r requirements.txt
+
+# Advanced monitoring (DOM / screenshot / price engines)
+# Pillow note: the API image also carries Pillow as a hard dependency of
+# reportlab (compliance PDF export) — that is the documented
+# "proven necessary non-browser path" exception; the API image still has
+# NO playwright, NO pixelmatch, NO Chromium. Same pin here keeps a single
+# Pillow version across both images.
+Pillow>=11,<13
+pixelmatch>=0.3,<1
+playwright>=1.50,<2

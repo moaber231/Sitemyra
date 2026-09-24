@@ -1,22 +1,39 @@
-# Sitemyra — production overlay for a single VPS
-# (Hetzner / DigitalOcean $12–$25/mo) or PaaS (Railway / Render).
+# Sitemyra — production overlay, designed for independent per-service
+# deployment (single VPS or container PaaS; no provider assumed).
 #
 # Usage:
 #   cp .env.example .env   # fill secrets; NEVER commit .env
 #   docker compose -f docker-compose.prod.yml up --build -d
 #   docker compose -f docker-compose.prod.yml exec backend python manage.py migrate
 #
+# Services (each can be scaled/deployed separately):
+#   backend              API (gunicorn, $PORT-aware, image target `api`)
+#   frontend             Next.js standalone (target `production`)
+#   celery-http-worker   HTTP checks + notifications (target `api`, NO Chromium)
+#   celery-browser-worker Playwright checks ONLY (target `browser`, Chromium)
+#   celery-beat          scheduler (target `api`)
+#   postgres / redis     data + broker
+#
 # Differences from docker-compose.yml (dev):
-#   - Gunicorn serves the API (3 workers, 120s timeout), not runserver.
+#   - Gunicorn serves the API (image default: 0.0.0.0:${PORT:-8000}).
 #   - Next.js runs the standalone production build, not `npm run dev`.
 #   - No source bind-mounts, no published DB ports, no default passwords.
 #   - restart: unless-stopped + capped JSON logs on every service.
+#   - Named artifact volume (artifact_data) shared by API + workers.
+#
+# Resource notes: measured RAM figures live in docs/RESOURCE-BUDGET.md.
+# Optional hard caps are shown commented out below — enable them only
+# with values supported by YOUR host's measurements.
 
 x-logging: &prod-logging
   driver: json-file
   options:
     max-size: "10m"
     max-file: "3"
+
+x-backend-env: &backend-env
+  DJANGO_DEBUG: "0"
+  DJANGO_SETTINGS_MODULE: config.settings.production
 
 services:
   frontend:
@@ -37,7 +54,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -46,15 +63,111 @@ services:
   backend:
     build:
       context: ./backend
-    # Gunicorn production server (matches backend/Dockerfile CMD).
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
+      target: api
+    # No command override: image CMD runs entrypoint.sh, which binds
+    # gunicorn to 0.0.0.0:${PORT:-8000} with graceful shutdown.
     env_file:
       - .env
     environment:
-      DJANGO_DEBUG: "0"
-      DJANGO_SETTINGS_MODULE: config.settings.production
+      <<: *backend-env
+      PORT: ${PORT:-8000}
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_PORT:-8000}:${PORT:-8000}"
+    restart: unless-stopped
+    logging: *prod-logging
+    stop_grace_period: 35s
+    volumes:
+      - artifact_data:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os, urllib.request; req=urllib.request.Request('http://localhost:' + os.environ.get('PORT', '8000') + '/api/health/', headers={'X-Forwarded-Proto': 'https'}); urllib.request.urlopen(req, timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # mem_limit: 256m        # example — set from measured usage only
+
+  # HTTP/content checks + scheduler fan-out + artifact cleanup +
+  # notification delivery. API image: NO Chromium (queues celery_http,
+  # celery_notifications).
+  celery-http-worker:
+    build:
+      context: ./backend
+      target: api
+    command: celery -A config worker --loglevel=info --queues=celery_http,celery_notifications --concurrency=${HTTP_WORKER_CONCURRENCY:-4} --prefetch-multiplier=${CELERY_TASK_PREFETCH_MULTIPLIER:-1}
+    env_file:
+      - .env
+    environment: *backend-env
+    init: true
+    stop_grace_period: 120s
+    restart: unless-stopped
+    logging: *prod-logging
+    volumes:
+      - artifact_data:/app/storage # cleanup task deletes artifact objects
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$${HOSTNAME} --timeout 10 | grep -q ': OK'"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    # mem_limit: 512m        # example — set from measured usage only
+
+  # Playwright checks ONLY (browser image with Chromium). Concurrency 1,
+  # prefetch 1, child recycled every BROWSER_MAX_TASKS_PER_CHILD tasks.
+  # This is the only memory-heavy service (see docs/BROWSER-WORKER.md).
+  celery-browser-worker:
+    build:
+      context: ./backend
+      target: browser
+    command: celery -A config worker --loglevel=info --queues=celery_browser --concurrency=${BROWSER_WORKER_CONCURRENCY:-1} --prefetch-multiplier=1 --max-tasks-per-child=${BROWSER_MAX_TASKS_PER_CHILD:-50}
+    env_file:
+      - .env
+    environment:
+      <<: *backend-env
+      # The ONLY service allowed to import the Playwright task module.
+      CELERY_IMPORTS: monitors.advanced_tasks
+    init: true          # reaps Chromium zombies on child recycle
+    stop_grace_period: 180s   # > browser soft limit; lets in-flight check drain
+    restart: unless-stopped
+    logging: *prod-logging
+    volumes:
+      - artifact_data:/app/storage # writes screenshots/diffs/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$${HOSTNAME} --timeout 10 | grep -q ': OK'"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 45s
+    # mem_limit: 1g          # example — set from measured usage only
+    # shm_size: "256m"       # example — Chromium already uses
+    #                        # --disable-dev-shm-usage (fallback: /tmp)
+
+  celery-beat:
+    build:
+      context: ./backend
+      target: api
+    # Schedule file in /tmp: all beat entries are wall-clock safe, so a
+    # fresh container re-arms without it (see docs/OPTIMIZATION-PLAN.md R9).
+    command: celery -A config beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    env_file:
+      - .env
+    environment: *backend-env
+    init: true
+    stop_grace_period: 10s
     restart: unless-stopped
     logging: *prod-logging
     depends_on:
@@ -63,45 +176,13 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/', timeout=5)\""]
-      interval: 30s
+      # Healthy while the schedule file was written in the last 5 minutes
+      # (schedule-due-monitors fires every 60s when beat is alive).
+      test: ["CMD-SHELL", "find /tmp -maxdepth 1 -name 'celerybeat-schedule*' -mmin -5 | grep -q ."]
+      interval: 60s
       timeout: 10s
       retries: 3
       start_period: 30s
-
-  celery-worker:
-    build:
-      context: ./backend
-    command: celery -A config worker --loglevel=info --concurrency=4
-    env_file:
-      - .env
-    environment:
-      DJANGO_DEBUG: "0"
-      DJANGO_SETTINGS_MODULE: config.settings.production
-    restart: unless-stopped
-    logging: *prod-logging
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  celery-beat:
-    build:
-      context: ./backend
-    command: celery -A config beat --loglevel=info
-    env_file:
-      - .env
-    environment:
-      DJANGO_DEBUG: "0"
-      DJANGO_SETTINGS_MODULE: config.settings.production
-    restart: unless-stopped
-    logging: *prod-logging
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
   postgres:
     image: postgres:16-alpine
@@ -144,3 +225,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  artifact_data: # screenshots/diffs/html — outlives container recreation

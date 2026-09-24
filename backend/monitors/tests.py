@@ -1,3 +1,5 @@
+from unittest import mock
+
 from django.test import TestCase
 from django.test import TestCase
 from django.urls import reverse
@@ -7,6 +9,7 @@ from rest_framework.test import APITestCase
 from accounts.models import User
 
 from .models import AdvancedMonitorConfig, Monitor
+from .services.fetcher import FetchResult
 
 
 class MonitorApiTests(APITestCase):
@@ -16,16 +19,28 @@ class MonitorApiTests(APITestCase):
         self.client.force_authenticate(self.user)
 
     def test_create_list_update_pause_resume_and_delete(self):
-        response = self.client.post(
-            reverse("monitor-list"),
-            {
-                "name": "My Website",
-                "url": "https://example.com",
-                "check_interval": 900,
-                "timeout": 15,
-            },
-            format="json",
-        )
+        # Phase E (plan D7): development settings run Celery eagerly, so
+        # this POST executes check_monitor inline. Mock the HTTP fetch to
+        # keep the suite deterministic — no real network in unit tests.
+        with mock.patch(
+            "monitors.tasks.fetch_url",
+            return_value=FetchResult(
+                status_code=200,
+                response_time_ms=42,
+                content=b"<html>ok</html>",
+                content_type="text/html",
+            ),
+        ):
+            response = self.client.post(
+                reverse("monitor-list"),
+                {
+                    "name": "My Website",
+                    "url": "https://example.com",
+                    "check_interval": 900,
+                    "timeout": 15,
+                },
+                format="json",
+            )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         monitor_id = response.data["id"]
 

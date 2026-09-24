@@ -46,7 +46,9 @@ class MonitorSerializer(serializers.ModelSerializer):
         )
 
     def get_last_response_time_ms(self, obj):
-        latest_check = obj.checks.order_by("-checked_at").first()
+        # latest_check is prefetched as a single-row list on list views
+        # (plan D9): one query total instead of one per monitor.
+        latest_check = obj.latest_check
 
         if not latest_check:
             return None

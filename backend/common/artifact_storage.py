@@ -13,6 +13,7 @@ and S3 delivery uses short-lived presigned URLs generated server-side.
 import logging
 import os
 import re
+import shutil
 from pathlib import Path
 from uuid import uuid4
 
@@ -265,6 +266,167 @@ def delete_key(key: str) -> bool:
     except OSError:
         return False
     return True
+
+
+def size_of(key: str) -> int:
+    """Byte size of one stored object (0 when undeterminable).
+
+    Retention logs reclaimed bytes (plan D8): the size must be read
+    BEFORE the object is deleted.
+    """
+    if is_legacy_local_path(key):
+        try:
+            return Path(key).stat().st_size
+        except OSError:
+            return 0
+    _validate_key(key)
+    if backend_name() == "s3":
+        from botocore.exceptions import ClientError
+
+        try:
+            head = _s3_client().head_object(
+                Bucket=_bucket(), Key=_s3_key(key)
+            )
+            return int(head.get("ContentLength", 0))
+        except ClientError:
+            return 0
+    try:
+        return (local_root() / key[len(KEY_PREFIX):]).stat().st_size
+    except OSError:
+        return 0
+
+
+def iter_storage_objects():
+    """Yield ``(logical_key, size_bytes, mtime_epoch)`` per object.
+
+    The retention orphan sweep (plan D8) walks storage through this on
+    both backends: local files and S3 objects both surface as logical
+    ``artifacts/<monitor>/<check>/<file>`` keys, plus legacy flat files
+    (surfaced as their absolute path, which is how old rows reference
+    them). ``mtime`` lets the sweep keep files younger than its grace
+    window — objects are written before their rows commit, and an
+    in-flight check's file must never be swept.
+    """
+    if backend_name() == "s3":
+        from botocore.exceptions import ClientError
+
+        prefix = _key_prefix() + KEY_PREFIX
+        client = _s3_client()
+        token = None
+        try:
+            while True:
+                kwargs = {"Bucket": _bucket(), "Prefix": prefix}
+                if token:
+                    kwargs["ContinuationToken"] = token
+                page = client.list_objects_v2(**kwargs)
+                logical_prefix = _key_prefix()
+                for entry in page.get("Contents", []):
+                    s3_key = entry["Key"]
+                    logical = s3_key
+                    if logical_prefix and logical.startswith(logical_prefix):
+                        logical = logical[len(logical_prefix):]
+                    modified = entry.get("LastModified")
+                    mtime = (
+                        modified.timestamp() if modified else 0.0
+                    )
+                    yield logical, int(entry.get("Size", 0)), mtime
+                if not page.get("IsTruncated"):
+                    break
+                token = page.get("NextContinuationToken")
+        except ClientError:
+            logger.exception("Artifact listing failed")
+            return
+        return
+
+    root = local_root()
+    if not root.is_dir():
+        return
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        try:
+            stat = path.stat()
+            rel = path.relative_to(root)
+        except (OSError, ValueError):
+            continue
+        if len(rel.parts) == 3:
+            # Normal layout (monitor/check/file) -> logical storage key.
+            yield (
+                f"{KEY_PREFIX}{'/'.join(rel.parts)}",
+                stat.st_size,
+                stat.st_mtime,
+            )
+        else:
+            # Pre-Phase-5 flat/legacy file: referenced by absolute path.
+            yield str(path), stat.st_size, stat.st_mtime
+
+
+def delete_prefix(monitor_id) -> tuple[int, int]:
+    """Delete every object under ``artifacts/<monitor_id>/``.
+
+    Used by the Monitor post_delete signal (plan D8) so a deleted
+    monitor leaves no artifact objects behind (rows already cascade).
+    Returns ``(files, bytes)``; never raises — a storage hiccup must
+    not fail a monitor delete (failures surface in the caller's log).
+    """
+    monitor_id = str(monitor_id)
+    if not re.match(r"^[A-Za-z0-9-]{1,64}$", monitor_id):
+        return 0, 0
+
+    if backend_name() == "s3":
+        from botocore.exceptions import ClientError
+
+        total_files = 0
+        total_bytes = 0
+        try:
+            client = _s3_client()
+            prefix = f"{_key_prefix()}{KEY_PREFIX}{monitor_id}/"
+            token = None
+            while True:
+                kwargs = {"Bucket": _bucket(), "Prefix": prefix}
+                if token:
+                    kwargs["ContinuationToken"] = token
+                page = client.list_objects_v2(**kwargs)
+                batch = page.get("Contents", [])
+                if batch:
+                    total_bytes += sum(
+                        int(obj.get("Size", 0)) for obj in batch
+                    )
+                    total_files += len(batch)
+                    client.delete_objects(
+                        Bucket=_bucket(),
+                        Delete={
+                            "Objects": [
+                                {"Key": obj["Key"]} for obj in batch
+                            ]
+                        },
+                    )
+                if not page.get("IsTruncated"):
+                    break
+                token = page.get("NextContinuationToken")
+        except ClientError:
+            logger.exception(
+                "Monitor artifact prefix delete failed [monitor_id=%s]",
+                monitor_id,
+            )
+            return 0, 0
+        return total_files, total_bytes
+
+    # Local: one directory tree per monitor (KEY_PREFIX stripped on
+    # write), so the whole prefix is a single rmtree.
+    directory = local_root() / monitor_id
+    files = 0
+    total_bytes = 0
+    if directory.is_dir():
+        for path in directory.rglob("*"):
+            if path.is_file():
+                files += 1
+                try:
+                    total_bytes += path.stat().st_size
+                except OSError:
+                    pass
+        shutil.rmtree(directory, ignore_errors=True)
+    return files, total_bytes
 
 
 def presigned_get_url(key: str, expires_in: int | None = None) -> str:

@@ -16,13 +16,13 @@ from common.artifact_storage import (
     url_expires_seconds,
 )
 
-from .advanced_tasks import run_advanced_monitor
 from .models import (
     AdvancedMonitorConfig,
     ChangeDiff,
     Monitor,
     PricePoint,
 )
+from .routing import enqueue_browser_check
 
 
 class AdvancedMonitorConfigSerializer(serializers.ModelSerializer):
@@ -152,14 +152,14 @@ def test_advanced_monitor(request, monitor_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    task = run_advanced_monitor.delay(
-        str(monitor.id)
-    )
+    # Published by NAME to celery_browser (Phase B): the API container
+    # must not import the Playwright-backed task module.
+    task_id = enqueue_browser_check(monitor.id)
 
     return Response(
         {
             "status": "queued",
-            "task_id": task.id,
+            "task_id": task_id,
             "monitor_id": str(monitor.id),
         },
         status=status.HTTP_202_ACCEPTED,

@@ -50,13 +50,32 @@ def _celery_status():
 
 
 def _browser_pool_health():
+    """Browser engine availability *in this container*.
+
+    The API container intentionally ships without Playwright/Chromium
+    (Phase B/C) — the engine lives on the dedicated browser worker. So
+    "not importable here" is the healthy state for the API, not a
+    failure of the browser service (worker liveness is covered by the
+    celery check above).
+    """
+    try:
+        import playwright  # noqa: F401
+    except ImportError:
+        return {
+            "status": "not-in-this-container",
+            "engine": "playwright",
+            "detail": (
+                "Playwright/Chromium runs on the dedicated browser "
+                "worker; this API container does not ship it."
+            ),
+        }
     try:
         from monitors.services.browser_fetcher import fetch_with_browser  # noqa
 
         return {
             "status": "ok",
             "engine": "playwright",
-            "detail": "Playwright module importable; pool lazily created per check.",
+            "detail": "Playwright module importable; browser worker owns it.",
         }
     except Exception as exc:
         return {"status": "error", "error": str(exc)[:200]}
@@ -76,13 +95,16 @@ def _disk_usage():
     import shutil
     from pathlib import Path
 
+    from common.artifact_storage import local_root
+
     candidates = [
-        Path("/app/storage/monitor-artifacts"),
-        Path("/app/storage"),
+        # Env-driven first (ARTIFACT_LOCAL_ROOT) — plan D10 removed
+        # the hardcoded /app/storage candidates.
+        local_root(),
         Path(settings.BASE_DIR) / "storage",
         Path(settings.BASE_DIR) / "backend" / "storage",
     ]
-    target = next((p for p in candidates if p.exists()), Path("/app/storage"))
+    target = next((p for p in candidates if p.exists()), candidates[0])
     try:
         du = shutil.disk_usage(str(target.parent if not target.exists() else target))
     except Exception as exc:

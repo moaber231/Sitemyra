@@ -29,12 +29,27 @@ def _check_redis():
 
 
 def _check_celery():
-    try:
-        from config.celery import app as celery_app
+    """Worker liveness from the Redis heartbeat registry.
 
-        # Short timeout so load-balancer probes never hang.
-        responses = celery_app.control.inspect(timeout=2).ping() or {}
-        workers = sorted(responses.keys())
+    Formerly a live ``control.inspect()`` broadcast per probe: ~2.1 s
+    each, and under concurrency the shared kombu pidbox producer pool
+    wedged (17/20 probes still blocked at 45 s, each pinning a DB
+    connection — docs/RESOURCE-BUDGET.md section 6). Workers now
+    re-register a TTL'd key every few seconds (config/worker_heartbeat.py);
+    this side only scans that prefix — no broker round-trip, safe to call
+    concurrently. Response shape unchanged.
+    """
+    from django.conf import settings
+
+    try:
+        import redis
+
+        from config.worker_heartbeat import live_workers
+
+        client = redis.Redis.from_url(
+            settings.REDIS_URL, socket_timeout=2
+        )
+        workers = live_workers(client)
         if not workers:
             return {"status": "degraded", "detail": "no workers responded"}
         return {"status": "ok", "workers": workers}

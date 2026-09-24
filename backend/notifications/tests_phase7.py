@@ -685,7 +685,10 @@ class ReliabilityTests(DnsShimMixin, TestCase):
             content_type="text/html",
         )
         with mock.patch("monitors.tasks.fetch_url", return_value=fetch), mock.patch(
-            "monitors.tasks.dispatch_monitor_event",
+            # Phase E (D7): the check task now hands off via
+            # deliver_monitor_event.delay — same guarantee under test:
+            # an exploding notifier must not fail the monitor task.
+            "monitors.tasks.deliver_monitor_event.delay",
             side_effect=RuntimeError("notify exploded"),
         ):
             result = check_monitor(str(self.monitor.id))

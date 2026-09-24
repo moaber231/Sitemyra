@@ -66,6 +66,16 @@ class Subscription(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [
+            # Phase E (plan D9): the Stripe webhook made up to four
+            # sequential scans — status/updated_at sweeps plus point
+            # lookups by subscription id and by customer id.
+            models.Index(fields=["status", "updated_at"]),
+            models.Index(fields=["stripe_subscription_id"]),
+            models.Index(fields=["stripe_customer_id"]),
+        ]
+
     def __str__(self):
         return f"{self.user} -> {self.plan} ({self.status})"
 

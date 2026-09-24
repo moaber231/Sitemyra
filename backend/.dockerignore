@@ -1,4 +1,29 @@
-__pycache__
-*.pyc
-.venv
-.git
+# Build-context exclusions (context = ./backend).
+# These previously leaked into the image: .venv-linux alone was 339 MB
+# and dominated the COPY layer (OPTIMIZATION-PLAN D1).
+__pycache__/
+*.py[cod]
+.venv/
+.venv-linux/
+.env
+.git/
+.gitignore
+
+# Runtime state — never build it into an image
+storage/
+logs/
+*.log
+celerybeat-schedule*
+*.pid
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# CI / editor
+.github/
+.idea/
+.vscode/

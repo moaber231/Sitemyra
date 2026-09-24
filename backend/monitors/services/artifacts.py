@@ -17,7 +17,9 @@ from common.artifact_storage import (
 )
 
 # Kept for backward-compatible imports; new code must use keys.
-BASE_DIR = Path("/app/storage/monitor-artifacts")
+# Env-driven (ARTIFACT_LOCAL_ROOT) — no hardcoded container path
+# anywhere in the app (plan D10).
+BASE_DIR = local_root()
 
 
 def save_artifact(

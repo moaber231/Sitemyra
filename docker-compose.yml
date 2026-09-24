@@ -20,14 +20,23 @@ services:
   backend:
     build:
       context: ./backend
+      target: api
     command: python manage.py runserver 0.0.0.0:8000
     environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
       DATABASE_URL: ${DATABASE_URL:-postgres://apeiro:apeiro@postgres:5432/apeiro}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-development-only-secret}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
-      EMAIL_PROVIDER_API_KEY: ${EMAIL_PROVIDER_API_KEY:-}
+      # SMTP (Hostinger) credentials come from .env — dev uses the console
+      # backend, but the vars are passed through so production settings work.
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-}
       EMAIL_FROM: ${EMAIL_FROM:-alerts@example.com}
       ARTIFACT_STORAGE: ${ARTIFACT_STORAGE:-local}
       AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
@@ -77,7 +86,7 @@ services:
     # S3-compatible object storage for artifact production use and
     # self-hosted environments. Disabled by default: set
     # ARTIFACT_STORAGE=s3 + AWS_* vars to use it.
-    image: minio/minio:latest
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-apeiro-minio}
@@ -87,23 +96,28 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  
 
-  celery-worker:
+  # HTTP/content checks + notification delivery (API image, no Chromium).
+  celery-http-worker:
     build:
       context: ./backend
-    command: celery -A config worker --loglevel=info
+      target: api
+    command: celery -A config worker --loglevel=info --queues=celery_http,celery_notifications --concurrency=${HTTP_WORKER_CONCURRENCY:-4} --prefetch-multiplier=${CELERY_TASK_PREFETCH_MULTIPLIER:-1}
     environment: &backend-environment
+      DJANGO_SETTINGS_MODULE: config.settings.development
       DATABASE_URL: ${DATABASE_URL:-postgres://apeiro:apeiro@postgres:5432/apeiro}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-development-only-secret}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
-      EMAIL_PROVIDER_API_KEY: ${EMAIL_PROVIDER_API_KEY:-}
+      # SMTP (Hostinger) credentials come from .env; the worker sends mail.
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-}
       EMAIL_FROM: ${EMAIL_FROM:-alerts@example.com}
       ARTIFACT_STORAGE: ${ARTIFACT_STORAGE:-local}
       AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
@@ -119,10 +133,32 @@ services:
       redis:
         condition: service_healthy
 
+  # Playwright checks only (browser image with Chromium). Concurrency 1:
+  # one Chromium per prefork child is the isolation model (BROWSER-WORKER.md).
+  celery-browser-worker:
+    build:
+      context: ./backend
+      target: browser
+    command: celery -A config worker --loglevel=info --queues=celery_browser --concurrency=${BROWSER_WORKER_CONCURRENCY:-1} --prefetch-multiplier=1 --max-tasks-per-child=${BROWSER_MAX_TASKS_PER_CHILD:-50}
+    init: true
+    stop_grace_period: 180s
+    environment:
+      <<: *backend-environment
+      # The ONLY service allowed to import the Playwright task module.
+      CELERY_IMPORTS: monitors.advanced_tasks
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   celery-beat:
     build:
       context: ./backend
-    command: celery -A config beat --loglevel=info
+      target: api
+    command: celery -A config beat --loglevel=info --schedule=/tmp/celerybeat-schedule
     environment: *backend-environment
     volumes:
       - ./backend:/app
