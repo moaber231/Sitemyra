@@ -50,18 +50,11 @@ export default function Topbar({
       <div className="flex shrink-0 items-center gap-3">
         <Link
           href="/dashboard/monitors/new"
-          className="apeiro-btn apeiro-btn-primary hidden sm:inline-flex"
-        >
-          <Plus size={15} />
-          Add monitor
-        </Link>
-
-        <Link
-          href="/dashboard/monitors/new"
           aria-label="Add monitor"
-          className="apeiro-btn apeiro-btn-primary sm:hidden"
+          className="apeiro-btn apeiro-btn-primary !h-10 !min-h-10 !w-10 !justify-center !px-0 sm:!w-auto sm:!px-4"
         >
           <Plus size={16} />
+          <span className="hidden sm:inline">Add monitor</span>
         </Link>
 
         <AccountMenu />

@@ -6,12 +6,13 @@ import {
   ExternalLink,
   Handshake,
   Mail,
+  Phone,
   MessageSquareText,
   ShieldAlert,
 } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/marketing-shell";
-import { FOUNDER_LINKS, getPublicContactEmail } from "@/lib/site";
+import { FOUNDER_LINKS, FOUNDER_PHONE, getPublicContactEmail } from "@/lib/site";
 import { marketingMetadata } from "@/lib/marketing-seo";
 
 export const metadata = marketingMetadata({
@@ -112,11 +113,18 @@ export default function ContactPage() {
           <div className="apeiro-card p-6 sm:p-8">
             <h2 className="text-xl font-semibold">Reach the founder directly</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              These public links are provided by the founder and are the best
-              way to make contact while a dedicated support address is being
-              finalized.
+              These public links are provided by the founder. You can also
+              email {contactEmail || "the Sitemyra contact address"} or call the
+              founder directly.
             </p>
             <div className="mt-6 grid gap-3">
+              <a
+                href={`tel:${FOUNDER_PHONE.replace(/\s/g, "")}`}
+                className="inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4 hover:text-accent"
+              >
+                <Phone size={16} aria-hidden="true" />
+                {FOUNDER_PHONE}
+              </a>
               <a
                 href={FOUNDER_LINKS[0].href}
                 target="_blank"

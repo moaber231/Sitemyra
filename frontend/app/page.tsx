@@ -325,6 +325,46 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section id="services" className="marketing-inverted px-5 py-24 sm:px-6 md:py-32 lg:px-8" aria-labelledby="services-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <div>
+              <div className="section-label section-label--dark">
+                <span aria-hidden="true" />
+                New service · Website construction
+              </div>
+              <h2 id="services-heading" className="mt-5 max-w-3xl text-4xl text-white sm:text-6xl">
+                Need a website that feels as good as your business?
+              </h2>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+                I also design and build fast, professional websites for small
+                businesses, teams, and brands — with English and Greek options.
+              </p>
+              <Link href="/services" className="apeiro-btn apeiro-btn-primary mt-8">
+                Explore website construction
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-blue-200">Starting packages</p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                {[
+                  ["Starter", "from €650"],
+                  ["Business", "from €950"],
+                  ["Premium", "from €1,500"],
+                ].map(([name, price]) => (
+                  <div key={name} className="flex items-center justify-between gap-4 border-b border-white/10 pb-3 last:border-0 last:pb-0">
+                    <span className="text-sm font-semibold text-white">{name}</span>
+                    <span className="font-mono text-xs text-blue-200">{price}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-5 text-xs leading-5 text-slate-400">Monthly care plans and domain / hosting coordination are also available.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="border-b border-border px-5 py-24 sm:px-6 md:py-32 lg:px-8">
         <PricingSection />
       </section>

@@ -5,6 +5,7 @@ import { Menu, ShieldCheck, X } from "lucide-react";
 
 const navigation = [
   { href: "/how-it-works", label: "How it works" },
+  { href: "/services", label: "Web design" },
   { href: "/pricing", label: "Pricing" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
