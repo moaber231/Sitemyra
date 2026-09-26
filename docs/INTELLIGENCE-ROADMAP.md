@@ -1,6 +1,15 @@
 # Sitemyra — Competitive Intelligence Roadmap
 
-**Status:** PLAN + Phase 1 implemented.
+**Status:** ALL SIX PHASES IMPLEMENTED.
+
+| Phase | Feature | State |
+|---|---|---|
+| 1 | URL onboarding + Product Watch | shipped (`intelligence` app, 138 tests) |
+| 2 | Competitor Pulse + Market Feed + discovery | shipped (134 further tests) |
+| 3 | AI change explanation + market signals | shipped, **narration off by default** |
+| 4 | Exports, reports, battlecards | shipped — 7 formats, no new dependency |
+| 5 | Agency mode | shipped — additive, no entitlement change |
+| 6 | Browser extension + bookmarklet | shipped — deny-by-default scope ceiling |
 **Scope:** evolve Sitemyra from "tell me when a webpage changes" into
 "give me a URL and continuously understand what that business is doing".
 **Basis:** read-only audit of the repository (monitoring engine, diff
@@ -236,7 +245,7 @@ no network: fixtures + mocked `fetch_url`).
 
 ---
 
-## PHASE 2 — Competitor Pulse and Market Feed
+## PHASE 2 — Competitor Pulse and Market Feed  ✅ implemented
 
 **Goal.** A chronological intelligence feed and a per-competitor pulse
 board. This is the "reason to come back" surface.
@@ -322,7 +331,7 @@ submitted URLs.
 
 ---
 
-## PHASE 3 — AI change explanation and market signals
+## PHASE 3 — AI change explanation and market signals  ✅ implemented
 
 **Goal.** Move from "what changed" to "why it may matter" and from
 individual changes to cross-competitor patterns — while keeping every
@@ -402,7 +411,7 @@ next to the deterministic text it may replace.
 
 ---
 
-## PHASE 4 — Exports, reports and battlecards
+## PHASE 4 — Exports, reports and battlecards  ✅ implemented
 
 **Goal.** Turn the intelligence into something an agency can send to a
 client.
@@ -465,7 +474,7 @@ branding is stored as plain text and escaped on render.
 
 ---
 
-## PHASE 5 — Agency mode
+## PHASE 5 — Agency mode  ✅ implemented
 
 **Goal.** One account, many client workspaces, branded deliverables.
 
@@ -624,3 +633,76 @@ and reports the remaining 11 with a reason, rather than failing.
 **Documentation deliverables per phase:** `SYSTEM_DOCUMENTATION.md`
 (models, endpoints, limits, known gaps), `README.md` (what's in the box),
 `.env.example` (every new variable), and this roadmap's status line.
+
+
+---
+
+## Appendix — as built (what the six phases actually produced)
+
+### Models added (15)
+
+`UrlAnalysis`, `DiscoveredTarget`, `ProductWatch`, `ProductSnapshot`,
+`ProductChange` (1) · `Competitor`, `CompetitorCandidate`, `SignalEvent`,
+`MarketSignal` (2) · `ChangeExplanation` (3) · `Report`, `Battlecard` (4) ·
+`Organization`, `OrganizationMembership` (5) · `BrowserSession` (6)
+
+Plus two nullable columns: `Workspace.organization` and
+`Subscription.organization`.
+
+### Endpoints added (23)
+
+Phase 1 — `analyze/`, `public/analyze/`, `activate/`, `quick-monitor/`,
+`recipes/`, `product-watches/`, `product-watches/{id}/`,
+`product-watches/{id}/timeline/`, `monitors/{id}/product/`
+
+Phase 2 — `feed/`, `pulse/`, `overview/`, `competitors/`,
+`competitors/discover/`, `competitors/approve/`, `competitors/{id}/`,
+`competitors/{id}/activity/`, `_internal/derive/`
+
+Phase 3 — `events/{id}/`, `signals/`, `signals/{id}/review/`,
+`narration-preference/`
+
+Phase 4 — `export/`, `reports/`, `reports/{id}/`,
+`reports/{id}/download/`, `competitors/{id}/battlecard/`
+
+Phase 5 — `organizations/`, `organizations/{id}/`, `…/members/`,
+`…/workspaces/`, `…/branding/`
+
+Phase 6 — `extension-sessions/`, `extension-sessions/{id}/`
+
+### Four things that changed the design while building it
+
+1. **Discovery had to read the *comparison page*, not the submitted
+   page.** The first implementation looked for external links among the
+   submitted page's own links — which are all same-site by definition, so
+   it could never find a competitor. The flow is now: submitted site →
+   its own "alternatives"/"compare" page → the external links on *that*
+   page. If the site publishes no comparison page, Sitemyra says so
+   rather than guessing.
+
+2. **The export format parameter is `?type=`, not `?format=`.** DRF's
+   `URL_FORMAT_OVERRIDE` is `"format"`, and DRF consumes it during
+   content negotiation *before* the view runs — so `?format=csv` returns
+   404 "Not found." because there is no `csv` renderer. This is the same
+   trap already documented for the compliance export; Phase 4 inherits
+   the `?type=` convention rather than rediscovering it.
+
+3. **The extension scope ceiling is enforced by an allowlist, not by
+   good intentions.** A `BrowserSession` token authenticates as the user,
+   so a permission check that only asked "is this authenticated?" would
+   have let it reach billing, reports and agency administration. The fix
+   is `intelligence/extension_auth.py::EXTENSION_ALLOWED_VIEWS`, a
+   deny-by-default set of URL names; anything unlisted is refused with 401
+   before the view runs. Two tests cover billing and reports specifically.
+
+4. **A market signal must be gated on distinct competitor *ids*, not
+   names.** Two competitors can share a display name, and the first
+   implementation grouped by competitor and then required two competitors
+   in the group — which is unreachable by construction.
+
+### Cost per monitored page (unchanged from Phase 1)
+
+One HTTP GET plus ~1–3 ms of parsing. Product tracking reads the bytes
+the check already downloaded. The feed derivation is a beat task over
+indexed columns, and it is idempotent by `source_key`, so the 15-minute
+tick can overlap freely.

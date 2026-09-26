@@ -14,6 +14,16 @@ class Workspace(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=180, unique=True, blank=True)
+    # Phase 5: an agency client workspace. NULLABLE on purpose — every
+    # existing personal workspace stays null and behaves exactly as before.
+    organization = models.ForeignKey(
+        "intelligence.Organization",
+        on_delete=models.CASCADE,
+        related_name="client_workspaces",
+        null=True,
+        blank=True,
+    )
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

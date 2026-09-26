@@ -10,8 +10,8 @@
 
 | Check | Result |
 |-------|--------|
-| Backend test suite | **359 tests, all passing** (~99 s) — run via `docker compose run --rm celery-browser-worker python manage.py test accounts monitors notifications billing common workspaces ops intelligence` (the browser image contains pixelmatch, which some monitor tests import; the API image intentionally does not). 221 pre-existing + 138 new in `intelligence` |
-| Frontend type check / build | `npx tsc --noEmit` clean; `npm run build` exit 0 (31 routes) |
+| Backend test suite | **493 tests, all passing** (~196 s) — run via `docker compose run --rm celery-browser-worker python manage.py test accounts monitors notifications billing common workspaces ops intelligence` (the browser image contains pixelmatch, which some monitor tests import; the API image intentionally does not). 221 pre-existing + 272 in `intelligence` |
+| Frontend type check / build | `npx tsc --noEmit` clean; `npm run build` exit 0 (39 routes) |
 | Competitive-intelligence journey (live) | Registered → analysed a real public storefront over HTTP → activated 3 monitors (free-plan clamp reported) → product snapshot captured with evidence → analysis cache hit. Verified against `books.toscrape.com` |
 | API image isolation | `import config.wsgi` OK with Playwright blocked by a `sys.meta_path` blocker; `import playwright`/`pixelmatch` → `ModuleNotFoundError` in the API image |
 | Version control | Git repository, branch `main`, remote `github.com/moaber231/Sitemyra` |
@@ -171,7 +171,7 @@ Route-level UX: `loading.tsx` skeletons under `/dashboard`, plus `global-error.t
 | `/api/notifications/` | `preferences/` (GET/PATCH), `channels/` (GET/POST), `channels/<uuid>/` (GET/PUT/DELETE), `channels/<uuid>/test/` (POST) | Plan channel caps; workspace webhooks are Owner/Admin-only |
 | `/api/workspaces/` | CRUD, `members/` (GET/POST role change), `members/<id>` (DELETE), `invites/` (GET/POST), `invites/<token>/accept/` | Owner auto-membership; the Owner role is not grantable by invite |
 | `/api/billing/` | `plans/`, `subscription/`, `checkout/`, `portal/`, `webhook/` (CSRF-exempt) | Stub responses without keys; signature-verified when `STRIPE_WEBHOOK_SECRET` is set |
-| `/api/intelligence/` | `analyze/` (POST), `public/analyze/` (POST, unauthenticated + throttled), `activate/` (POST), `quick-monitor/` (POST), `recipes/` (GET), `product-watches/` (GET), `product-watches/<uuid>/` (GET), `product-watches/<uuid>/timeline/` (GET), `monitors/<uuid>/product/` (GET) | See §3.6. Cross-tenant reads return 404, never 403 |
+| `/api/intelligence/` | **1** `analyze/`, `public/analyze/` (unauthenticated, throttled), `activate/`, `quick-monitor/`, `recipes/`, `product-watches/`, `product-watches/<uuid>/`, `product-watches/<uuid>/timeline/`, `monitors/<uuid>/product/` · **2** `feed/`, `pulse/`, `overview/`, `competitors/`, `competitors/discover/`, `competitors/approve/`, `competitors/<uuid>/`, `competitors/<uuid>/activity/` · **3** `events/<uuid>/`, `signals/`, `signals/<uuid>/review/`, `narration-preference/` · **4** `export/`, `reports/`, `reports/<uuid>/`, `reports/<uuid>/download/`, `competitors/<uuid>/battlecard/` · **5** `organizations/`(+`members`,`workspaces`,`branding`) · **6** `extension-sessions/`(+detail) | See §3.6 and §3.8. Cross-tenant reads return 404, never 403. **Export format is `?type=`, not `?format=`** (§3.9) |
 | `/api/admin/` | `metrics/` (GET), `diagnostics/` (GET, POST to run a live dispatch test) | `IsAdminUser` (staff/superuser) only |
 
 ### 3.3 Data models (UUID primary keys throughout)
@@ -192,6 +192,13 @@ Route-level UX: `loading.tsx` skeletons under `/dashboard`, plus `global-error.t
 | `ProductWatch` | `intelligence/models.py` | OneToOne to `Monitor` (CASCADE) — product name, brand, currency, `product_detected`, `detection_note`, first/last seen |
 | `ProductSnapshot` | `intelligence/models.py` | Observed product state for one check: price, list price, currency, availability, rating, review count, description, badges/variants/images/bundles/specs/shipping JSON, plus `extraction` (method per field) and `evidence` (raw text per field) |
 | `ProductChange` | `intelligence/models.py` | Timeline row: `field`, `before`, `after`, `severity` (informational/minor/important/critical), `category`, `basis` (the human reason), `rule` (e.g. `rule:price`), `evidence`, `source_url` |
+| `Competitor` (tracked/direct/adjacent/alternative), `CompetitorCandidate` (proposals, never monitored unapproved), `SignalEvent` (feed row; derived, `source_key` unique ⇒ idempotent) | `intelligence/models.py` | A competitor is a registrable domain, not a URL. `SignalEvent.monitor` is CASCADE, so deleting a monitor removes its feed rows |
+| `MarketSignal` | `intelligence/models.py` | Cross-competitor pattern. `fingerprint` (unique) makes detection idempotent; `evidence` is a non-empty list of the rows it was built from |
+| `ChangeExplanation` | `intelligence/models.py` | One row per explanation. The rule-based text is **always** stored with `is_fallback=True`; an AI narration is a *second* row, so the deterministic text is never lost |
+| `Report`, `Battlecard` | `intelligence/models.py` | `Report.payload` stores the composed report so a download reproduces exactly what was shared. `Battlecard.fingerprint` + `source_event_ids` drive explicit staleness |
+| `Organization`, `OrganizationMembership` (owner/admin/analyst/viewer) | `intelligence/models.py` | The agency. `Organization.branding` is plain text + a hex colour; never HTML, never a fetched URL |
+| `BrowserSession` | `intelligence/models.py` | Phase 6 extension credential. SHA-256 `token_hash` (raw shown once), `scopes` hard-capped to `monitors:read monitors:write`, `expires_at`, `revoked_at` |
+| `Workspace.organization`, `Subscription.organization` | `workspaces/`, `billing/` | Both **nullable**: a personal account is untouched. An agency plan only resolves once it is actually paid |
 
 ### 3.4 Plan limits and enforcement
 
@@ -326,6 +333,106 @@ and is wrapped so intelligence can never break a notification.
   `12/hour`, per IP). Adding `DEFAULT_THROTTLE_RATES` does not throttle any
   other endpoint because no other view declares a throttle class.
 
+### 3.8 Phases 2–6 — feed, signals, exports, agency, extension
+
+**Market feed (Phase 2).** `SignalEvent` is *derived*, never authored: it is
+built from a `ProductChange`, a changed `MonitorCheck`, or a `ChangeDiff`.
+Idempotency is by `source_key`, so the 15-minute beat tick
+(`intelligence.tasks.derive_signals`) can overlap its window freely and a
+Celery retry cannot duplicate a row. A check that produced a product change
+is **not** also reported as a content change, so one competitor move is
+never reported twice.
+
+Pagination is cursor-based on `(detected_at, id)`, not offset-based: a new
+event arriving mid-scroll cannot duplicate or skip a row the way an offset
+would.
+
+**Pulse.** `intelligence/services/feed.py::pulse_for_competitor` returns
+**descriptive states only** — `changed_recently`,
+`no_significant_change_detected`, `multiple_changes_detected`,
+`pricing_changed`, `product_change_detected`, `feature_change_detected`,
+`hiring_change_detected`, `marketing_change_detected` — plus plain counts.
+There is no score, rating, health or threat number anywhere in the code or
+the API, and a test asserts the response contains no such key.
+
+**Discovery (Feature 2).** The honest version: the user submits **their own**
+site; Sitemyra finds that site's own "alternatives"/"compare" page and
+reads the **external** links on it. Social and app-store links are excluded
+by host *and* by path token ("follow", "share", …). Shared capability
+keywords are computed by fetching the candidate and comparing real page
+text — an unreadable candidate yields *no* keywords rather than an invented
+one. Candidates are proposals; `POST …/competitors/approve/` is the only
+path that creates a monitor, and it is idempotent.
+
+**AI narration (Phase 3).** **Off by default and inert without a
+provider.** `AI_PROVIDER`/`AI_API_KEY`/… are empty in the shipped
+configuration, so the product makes no outbound AI request at all. When a
+user opts in *and* a provider is configured:
+
+- only a **derived evidence packet** leaves the process — text already
+  public at the monitored URL, plus the rule names. No user identity, no
+  workspace name, no internal ids;
+- every sentence must cite an evidence id that exists in the packet
+  (`validate_narration`); an unresolvable citation discards the **whole**
+  narration;
+- the deterministic explanation is stored **first**, always, with
+  `is_fallback=True`; a narration is a second row for the same event, so
+  the rule-based text survives even if the AI row later proves wrong;
+- any failure — no provider, network error, bad shape, timeout — returns
+  the deterministic text. `narrate_event` never raises.
+
+**Market signals (Feature 10).** Gated on **distinct competitor ids**
+(names can legitimately collide, and a shared name must not collapse a
+real two-competitor pattern). Minimum 2 competitors; idempotent by
+evidence fingerprint; the interpretation is phrased as a possibility and
+the evidence list is never empty.
+
+**Exports (Phase 4).** Seven formats, **no new dependency**. `xlsx` is
+hand-written Office Open XML over stdlib `zipfile` with fixed zip
+timestamps, so the same input produces byte-identical output; adding
+openpyxl for ~100 lines of code would be a permanent supply-chain surface
+for no product gain. `pdf` uses the reportlab dependency the compliance
+export already has, with the same hand-rolled fallback when it is absent.
+Every exporter places `source_url` and `detected_at` on every row, so a
+downloaded file is self-auditing. HTML/XML escape fetched content; there
+is a test that a hostile product name cannot inject markup.
+
+**Agency mode (Phase 5).** `Organization → Workspace → everything else`.
+`Workspace.organization` and `Subscription.organization` are both
+**nullable**, so no existing account changes behaviour. `PLAN_LIMITS` gains
+`max_seats`, `max_client_workspaces` and `white_label`, with defaults equal
+to the pre-Phase-5 behaviour (1 / 1 / false) so a personal plan carries no
+agency features. `get_plan_for_user` resolves superuser → **paid**
+organization → personal subscription, and falls through safely: an unpaid
+or deactivated agency leaves the member on exactly the plan they had.
+`DELETE /organizations/{id}/` **deactivates** rather than deletes, so
+client workspaces, monitors and reports are preserved. White-label
+branding requires the plan to include it *and* a paid backing subscription,
+and is validated as plain text plus a hex colour (no HTML, no fetched URL).
+
+**Extension (Phase 6).** See §3.9.
+
+### 3.9 Two traps worth writing down
+
+**1. `?format=` is DRF's renderer override, not a filter.** DRF's
+`URL_FORMAT_OVERRIDE` is `"format"` and it is consumed during **content
+negotiation, before the view runs**. `GET …/export/?format=csv` therefore
+returns `404 {"detail": "Not found."}` — there is no `csv` renderer. The
+intelligence export reads its format from `?type=` (with `?fmt=` as an
+alias), matching the convention the compliance export already documented.
+Any new endpoint that takes a format parameter must use `?type=`.
+
+**2. An extension token authenticates as the user.** A permission check
+that only asks "is this authenticated?" would therefore let a token minted
+in a browser reach billing, alert channels, exports, reports and agency
+administration. `intelligence/extension_auth.py` closes this with
+`EXTENSION_ALLOWED_VIEWS`: a deny-by-default set of **URL names**, checked
+in the authentication class — which runs after URL resolution, so the view
+name is known. Anything unlisted is refused with 401 before the view is
+entered. A new endpoint is therefore denied until it is deliberately
+opened, which is the correct default for a credential that lives in a
+browser.
+
 ### 3.7 Engine comparison
 
 | | HTTP engine (`fetcher.py` + `normalizer.py`) | Browser engine (`browser_fetcher.py` + `dom_diff.py` / `screenshot_diff.py` / `price_extractor.py`) |
@@ -418,6 +525,7 @@ Full annotated template: `.env.example`. `.env` is git-ignored and must never be
 | `GOOGLE_CLIENT_ID/SECRET/REDIRECT_URI`, `GITHUB_CLIENT_ID/SECRET/REDIRECT_URI` | For real SSO | `accounts/oauth.py` | Empty = provider reported unavailable (503 on start) |
 | `OAUTH_STATE_TTL_SECONDS` | No | Signed state lifetime | Default 600 |
 | `PUBLIC_ANALYZE_RATE` | No | Rate limit for the **unauthenticated** marketing demo (`POST /api/intelligence/public/analyze/`) | Scoped DRF throttle on that one view; default `12/hour` per IP. No other endpoint is throttled |
+| `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, `AI_BASE_URL`, `AI_TIMEOUT_SECONDS` | No | Optional AI narration (Phase 3) | **All empty = disabled**, which is the shipped default and means zero outbound AI requests. `AI_API_KEY` is server-side only — never expose it with a `NEXT_PUBLIC_` prefix |
 | `MINIO_ROOT_USER/PASSWORD` | If using dev MinIO | minio container | Dev only |
 
 ---
@@ -493,13 +601,16 @@ Unit economics: a single Business customer ($49) covers the single-VPS fleet; HT
 | 5 | `?format=` is unusable on the compliance export (DRF renderer 404); documented workaround is `?type=` | Low (docs) | XS |
 | 6 | Two notification paths coexist (`deliver_monitor_event` → `celery_notifications` primary, `queue_notification`/`dispatch_webhooks` legacy) | Low | S — consolidate |
 | 7 | Default `ALLOWED_HOSTS = ["*"]` in base settings; safe only because `production.py` overrides it from env | Low | XS |
-| 8 | Extraction cannot see JavaScript-rendered storefronts that publish neither structured data nor a price/stock-marked element. Such a URL is still monitorable as a content page, and the UI says "product data not detected" rather than guessing | Low (product limit) | M — optional browser-mode extraction in a later phase |
-| 9 | No AI/LLM call on the intelligence path. Every explanation is a deterministic rule in `intelligence/services/product_diff.py` — deliberate (see `docs/INTELLIGENCE-ROADMAP.md` Phase 3), and a hallucinated competitor price would be worse than "not detected" | By design | Phase 3 |
-| 10 | `intelligence` reads the page synchronously inside the analyze request (bounded by `MAX_ANALYSIS_TIMEOUT_SECONDS=30`). A slow competitor page therefore holds an API worker; the 6 h analysis cache keeps repeat pastes free | Low | S — move to a queued task with polling if abuse appears |
-| 11 | `GET /api/intelligence/product-watches/<id>/` and the timeline are not paginated (capped at 50/200 rows). Fine at Phase 1 volume; a cursor is specified in the Phase 2 feed design | Low | M |
-| 12 | The bookmarklet opens the intake page rather than calling the API directly. Deliberate — it keeps **zero** credentials in the browser. A Chromium extension with a scoped, revocable token is designed in Phase 6 | By design | Phase 6 |
+| 8 | Extraction cannot see JavaScript-rendered storefronts that publish neither structured data nor a price/stock-marked element. Such a URL is still monitorable as a content page, and the UI says "product data not detected" rather than guessing | Low (product limit) | M — optional browser-mode extraction |
+| 9 | No AI/LLM call unless `AI_PROVIDER` is configured. Every explanation is a deterministic rule in `intelligence/services/product_diff.py`; optional narration is opt-in, citation-checked, and never replaces the rule-based text | By design | shipped |
+| 10 | `intelligence` reads the page synchronously inside the analyze/discover request (bounded by `MAX_ANALYSIS_TIMEOUT_SECONDS=30`, and 8–10 s per candidate during discovery). The 6 h analysis cache keeps repeat pastes free, and discovery is explicitly a deliberate user action | Low | S — queue it if volume grows |
+| 11 | The **unauthenticated** demo endpoint performs a synchronous outbound fetch. SSRF-guarded and rate limited, but it is an open fetch proxy by design for any public URL | Medium (open, tracked) | S — hard concurrency cap on that view, or queue it |
+| 12 | Report and product-watch detail are capped rather than paginated (200 / 50 rows). The **feed** is properly cursor-paginated | Low | M |
+| 13 | `MarketSignal` detectors are rule-based over feed rows, so a pattern is only found once the constituent changes exist. That is inherent to the approach, not a defect | By design | — |
+| 14 | Agency seat limits are checked at creation, not continuously. A plan downgrade pauses client monitors (existing behaviour) but seats are not evicted | Low | S — seat reconciliation on downgrade |
+| 15 | `extension/icons/*.png` are 1×1 placeholders. The extension will not pass review until real artwork is added | Low (cosmetic) | XS |
 
-Completed since earlier revisions (no longer open): repository under git; **Phase 1 competitive intelligence** (URL intake, target discovery, recipes, product tracking, explainable change history — §3.6, with 138 tests); artifact retention job **plus** `ARTIFACT_RETENTION_DAYS` cap, orphan sweep, monitor-delete prefix purge, named `artifact_data` volume; S3/MinIO backend; artifact download endpoint; **per-hop + subresource SSRF validation for the browser (CDP Fetch)**; **persistent browser pool with driver-thread isolation**; **queue split (`celery_http`/`celery_browser`/`celery_notifications`) with API image free of Playwright**; **multi-stage Dockerfile (api/browser targets)**; **notifications off the critical path**; **scheduler batching + 3 new indexes (`MonitorCheck.checked_at`, `Subscription(status, updated_at)`/stripe IDs)**; **monitor-list N+1 fix**; **digest byte-identical N+1 rewrite + Monday 09:00 crontab**; real OAuth authorization-code flow (no identity-bridge fallback); **`/api/health/` celery check replaced with a concurrency-safe Redis worker heartbeat (former inspect() broadcast wedged under concurrency and pinned DB connections — former gap #3, fixed with 17 regression tests; see `docs/RESOURCE-BUDGET.md` §6)**.
+Completed since earlier revisions (no longer open): repository under git; **all six competitive-intelligence phases** (URL intake, product tracking, market feed, competitor pulse, discovery, AI explanation, market signals, seven export formats, reports, battlecards, agency mode, browser extension — §3.6/§3.8/§3.9, with 272 tests); artifact retention job **plus** `ARTIFACT_RETENTION_DAYS` cap, orphan sweep, monitor-delete prefix purge, named `artifact_data` volume; S3/MinIO backend; artifact download endpoint; **per-hop + subresource SSRF validation for the browser (CDP Fetch)**; **persistent browser pool with driver-thread isolation**; **queue split (`celery_http`/`celery_browser`/`celery_notifications`) with API image free of Playwright**; **multi-stage Dockerfile (api/browser targets)**; **notifications off the critical path**; **scheduler batching + 3 new indexes (`MonitorCheck.checked_at`, `Subscription(status, updated_at)`/stripe IDs)**; **monitor-list N+1 fix**; **digest byte-identical N+1 rewrite + Monday 09:00 crontab**; real OAuth authorization-code flow (no identity-bridge fallback); **`/api/health/` celery check replaced with a concurrency-safe Redis worker heartbeat (former inspect() broadcast wedged under concurrency and pinned DB connections — former gap #3, fixed with 17 regression tests; see `docs/RESOURCE-BUDGET.md` §6)**.
 
 ### 5.6 Extension points
 

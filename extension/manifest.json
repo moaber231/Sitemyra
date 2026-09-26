@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Sitemyra — Monitor with Sitemyra",
+  "short_name": "Sitemyra",
+  "version": "0.1.0",
+  "description": "Send any public competitor or product page to Sitemyra as a monitor, from the page you are already on.",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "action": {
+    "default_title": "Monitor with Sitemyra",
+    "default_popup": "popup/popup.html"
+  },
+  "background": { "service_worker": "service-worker.js", "type": "module" },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

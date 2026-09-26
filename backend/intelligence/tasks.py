@@ -24,6 +24,43 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task(
+    soft_time_limit=settings.SCHEDULER_TASK_SOFT_TIME_LIMIT,
+    time_limit=settings.SCHEDULER_TASK_TIME_LIMIT,
+)
+def derive_signals():
+    """Turn recorded changes into market feed rows (Phase 2).
+
+    Idempotent by ``source_key``, so this runs on a 15-minute tick with an
+    overlapping window and never duplicates a feed entry. Also detects
+    cross-competitor market signals (Phase 3), which is idempotent by an
+    evidence fingerprint.
+    """
+    from .services import narration as narration_service
+    from .services import signals as signal_service
+
+    summary = signal_service.derive_signals()
+
+    signals_created = 0
+    try:
+        from .models import Competitor
+
+        users = list(
+            Competitor.objects.values_list("user_id", flat=True).distinct()[:200]
+        )
+        from accounts.models import User
+
+        for user in User.objects.filter(pk__in=users).order_by("pk")[:200]:
+            created = narration_service.detect_market_signals(user)
+            signals_created += len(created)
+    except Exception:
+        # Market-signal detection is additive: a failure here must never
+        # cost us the feed rows already written.
+        logger.exception("intelligence market signal detection failed")
+    summary["signals"] = signals_created
+    return summary
+
+
+@shared_task(
     soft_time_limit=settings.CLEANUP_TASK_SOFT_TIME_LIMIT,
     time_limit=settings.CLEANUP_TASK_TIME_LIMIT,
 )

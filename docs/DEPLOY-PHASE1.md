@@ -207,3 +207,107 @@ Per INSTRUCTION.md §9:
 - [ ] **Deployed and the checklist in §4 reported** — needs the VPS agent
 - [ ] **Verified in production and eyeballed by Mo** — needs the VPS agent + Mo
 - [ ] **`PUBLIC_ANALYZE_RATE` added to the server's `.env`** — needs the VPS agent
+
+
+---
+
+# ADDENDUM — Phases 2–6 migrations (read before you run `migrate`)
+
+Phase 1 shipped one migration. This release adds **five**, all in this
+release, all additive.
+
+| Migration | What it does | Destructive? |
+|---|---|---|
+| `accounts.0004_user_ai_narration_enabled` | Adds one `BOOLEAN NOT NULL DEFAULT false` column to `accounts_user` | No |
+| `intelligence.0002_competitor_…` | Creates `intelligence_competitor`, `_competitorcandidate`, `_signalevent`, `_marketsignal` + indexes | No — new tables |
+| `intelligence.0003_organization_…` | Creates `intelligence_organization`, `_organizationmembership`, `_report`, `_battlecard`, `_browser_session`, `_changeexplanation` + indexes | No — new tables |
+| `workspaces.0003_workspace_organization` | Adds a **nullable** FK to `workspaces_workspace` | No |
+| `billing.0004_subscription_organization` | Adds a **nullable** FK to `billing_subscription` | No |
+
+**Verified additive.** Pre-fingerprinting the schema, applying every
+migration, and diffing shows **zero pre-existing columns changed or
+removed**. The two FKs on existing tables are `null=True`, so every
+existing row keeps `NULL` and behaves exactly as before. The one added
+boolean defaults to `false`, which is the "narration off" state.
+
+`ALTER TABLE … ADD COLUMN … NULL` and `ADD COLUMN … BOOLEAN NOT NULL
+DEFAULT false` are both metadata-only in PostgreSQL 11+ and do not rewrite
+`accounts_user`.
+
+## New environment variables — all optional
+
+Add to the server `.env` (a working default exists in code, so this is not
+deploy-blocking):
+
+```
+PUBLIC_ANALYZE_RATE=12/hour      # Phase 1; still applies
+AI_PROVIDER=                      # leave EMPTY — narration stays off
+AI_API_KEY=                       # leave EMPTY
+AI_MODEL=
+AI_BASE_URL=
+AI_TIMEOUT_SECONDS=20
+```
+
+**Leave `AI_PROVIDER` empty.** With it empty the product makes zero
+outbound AI requests, and every change still gets a deterministic
+explanation. Setting it is a separate, deliberate decision — read
+`SYSTEM_DOCUMENTATION.md` §3.8 first.
+
+## New background task
+
+`intelligence.tasks.derive_signals` runs every 15 minutes (beat entry
+`derive-market-signals`, schedule 900s). It is idempotent by `source_key`,
+so an overlapping window is safe. No new worker, queue or container.
+
+## Smoke tests beyond Phase 1
+
+Run these with a signed-in session against the deployed API.
+
+```bash
+# 1. The feed exists and is empty for a new account (not an error).
+curl -sS -H "Authorization: Bearer $TOKEN"   "$API/api/intelligence/feed/" | jq '{count, available_kinds}'
+
+# 2. Pulse returns descriptive states and NO score key.
+curl -sS -H "Authorization: Bearer $TOKEN"   "$API/api/intelligence/pulse/" | jq '.competitors[0].states'
+#    expect: []  or  ["no_significant_change_detected"]
+#    jq '.competitors[0] | keys'  ->  must NOT contain score/health/threat
+
+# 3. Export works — NOTE ?type=, NOT ?format= (?format= 404s: DRF owns it)
+curl -sS -o /tmp/intel.csv -w '%{http_code} %{content_type}\n'   -H "Authorization: Bearer $TOKEN"   "$API/api/intelligence/export/?type=csv"
+head -1 /tmp/intel.csv          # must include source_url and detected_at
+
+# 4. An extension token is refused everywhere except monitoring.
+curl -sS -o /dev/null -w 'feed=%{http_code} ' -H "Authorization: Bearer $EXT"   "$API/api/intelligence/feed/"
+curl -sS -o /dev/null -w 'billing=%{http_code}\n' -H "Authorization: Bearer $EXT"   "$API/api/billing/subscription/"
+#    expect: feed=200 billing=401
+
+# 5. Narration is off and reports no provider.
+curl -sS -H "Authorization: Bearer $TOKEN"   "$API/api/intelligence/narration-preference/" | jq .
+#    expect: {"ai_narration_enabled": false, "provider_configured": false, ...}
+
+# 6. Agency endpoints are additive: no org exists for a personal account.
+curl -sS -H "Authorization: Bearer $TOKEN"   "$API/api/intelligence/organizations/" | jq '{organizations: (.organizations | length)}'
+#    expect: 0
+```
+
+## The one thing to watch
+
+`derive_signals` scans up to 2000 product changes and 2000 changed checks
+per tick. On a database that has been collecting for a long time the first
+tick is the expensive one; it is bounded and idempotent, so it will
+complete, but check the task log after the first deploy rather than
+assuming.
+
+## Rollback
+
+```bash
+python manage.py migrate intelligence 0001
+python manage.py migrate accounts 0003
+python manage.py migrate workspaces 0002
+python manage.py migrate billing 0003
+```
+
+All five are reversible (they drop only tables and columns this release
+created). As with Phase 1: **take the `pg_dump` first.** Rolling back
+discards every competitor, feed event, market signal, report, battlecard,
+agency and extension session created since the backup.

@@ -20,7 +20,7 @@ We are one team with three roles. No role is more important than another — the
 
 ## 2. Shared context (read this first)
 
-- **Product:** Sitemyra — multi-tenant competitive-intelligence SaaS. A user pastes a competitor or product URL; Sitemyra reads the page, discovers what is worth watching, and explains what changed with its evidence. Underneath it is still multi-tenant website change detection.
+- **Product:** Sitemyra — multi-tenant competitive-intelligence SaaS. A user pastes a competitor or product URL; Sitemyra reads the page, discovers what is worth watching, and explains what changed with its evidence. All six roadmap phases are shipped: intake, product tracking, market feed, competitor pulse, discovery, AI explanation, market signals, exports/reports, battlecards, agency mode, browser extension. Underneath it is still multi-tenant website change detection.
 - **Stack:** Next.js 15 frontend · Django 5.2 / DRF backend · Celery (queues `celery_http` / `celery_browser` / `celery_notifications`) on split workers — lightweight `celery-http-worker`, dedicated `celery-browser-worker` with Chromium (concurrency 1) — plus `celery-beat` · PostgreSQL 16 · Redis · optional MinIO for artifacts · Docker Compose.
 - **Source of truth:**
   - `SYSTEM_DOCUMENTATION.md` — architecture, endpoints, models, limits, known gaps. Trust it over memory.
@@ -29,7 +29,7 @@ We are one team with three roles. No role is more important than another — the
   - `.env.example` — the full list of environment variables and what each one does.
   - `docs/BROWSER-WORKER.md`, `docs/RESOURCE-BUDGET.md`, `docs/FREE-TIER-DEPLOYMENT.md` — Chromium worker internals, measured resource numbers, and why we make no free-tier claim yet.
   - `docs/INTELLIGENCE-ROADMAP.md` — what Phase 1 shipped and exactly what Phases 2–6 will add.
-  - `docs/DEPLOY-PHASE1.md` — the Phase 1 release handoff: backup, the one new env var, the single migration, the smoke tests, and the verified rollback.
+  - `docs/DEPLOY-PHASE1.md` — the Phase 1 release handoff: backup, env vars, migration, smoke tests, verified rollback. **Update it for the Phases 2–6 migrations before deploying them.**
   - `INSTRUCTION.md` (this file) — how we collaborate.
 - **Repository:** `github.com/moaber231/Sitemyra`, branch `main`. Production deploys only from `main`.
 - **Two compose files, never mix them:**
@@ -141,7 +141,7 @@ Fill in the production domains in `.env` (`FRONTEND_URL`, `BACKEND_PUBLIC_URL`, 
 A piece of work is finished when **all** of these are true:
 
 - [ ] Code is merged to `main` with tests passing:
-      `docker compose run --rm celery-browser-worker python manage.py test accounts monitors notifications billing common workspaces ops intelligence` (359 tests) and `cd frontend && npx tsc --noEmit`
+      `docker compose run --rm celery-browser-worker python manage.py test accounts monitors notifications billing common workspaces ops intelligence` (493 tests) and `cd frontend && npx tsc --noEmit`
       (the browser-worker service is the test host — some monitor tests import `pixelmatch`, which the API image deliberately excludes)
 - [ ] Documentation updated (`SYSTEM_DOCUMENTATION.md` / `README.md` / `.env.example` as applicable)
 - [ ] Deployed by you using §4, with the checklist reported

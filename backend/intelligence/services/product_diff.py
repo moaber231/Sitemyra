@@ -538,7 +538,12 @@ def explain(changes, product_name="", source_url="", detected_at=None):
         if change.get("source_url"):
             entry["source_url"] = change["source_url"]
         if change.get("detected_at"):
-            entry["detected_at"] = change["detected_at"]
+            # datetime -> ISO string, so the evidence block is JSON-safe
+            # wherever it is stored or rendered.
+            detected = change["detected_at"]
+            entry["detected_at"] = (
+                detected.isoformat() if hasattr(detected, "isoformat") else str(detected)
+            )
         evidence.append(entry)
 
     return {

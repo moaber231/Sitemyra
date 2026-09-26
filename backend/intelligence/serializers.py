@@ -14,6 +14,7 @@ from .models import (
     ProductWatch,
     UrlAnalysis,
 )
+from .models import Competitor as _Competitor, CompetitorCandidate as _CompetitorCandidate
 from .services import product_diff
 
 
@@ -281,4 +282,113 @@ class AnalyzeRequestSerializer(serializers.Serializer):
     def validate_url(self, value):
         if not value or not value.strip():
             raise serializers.ValidationError("Enter a URL to analyse.")
+        return value.strip()
+
+
+# ==========================================================================
+# Phase 2 — feed, competitors, discovery
+# ==========================================================================
+
+
+class FeedEventSerializer(serializers.Serializer):
+    """Read-only projection of one feed row. Not a ModelSerializer on
+    purpose: the feed exposes competitor/monitor names and the kind icon,
+    which are presentation concerns, not model fields."""
+
+    id = serializers.CharField(read_only=True)
+    kind = serializers.CharField(read_only=True)
+    icon = serializers.CharField(read_only=True)
+    headline = serializers.CharField(read_only=True)
+    summary = serializers.CharField(read_only=True)
+    before = serializers.CharField(read_only=True)
+    after = serializers.CharField(read_only=True)
+    severity = serializers.CharField(read_only=True)
+    source_url = serializers.CharField(read_only=True)
+    detected_at = serializers.DateTimeField(read_only=True)
+    competitor_id = serializers.CharField(read_only=True, allow_null=True)
+    competitor_name = serializers.CharField(read_only=True, allow_null=True)
+    monitor_id = serializers.CharField(read_only=True, allow_null=True)
+    monitor_name = serializers.CharField(read_only=True, allow_null=True)
+    product_change_id = serializers.CharField(read_only=True, allow_null=True)
+    monitor_check_id = serializers.CharField(read_only=True, allow_null=True)
+    evidence = serializers.DictField(read_only=True)
+    has_evidence = serializers.BooleanField(read_only=True)
+
+
+class CompetitorCandidateSerializer(serializers.ModelSerializer):
+    reason_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = _CompetitorCandidate
+        fields = (
+            "id",
+            "url",
+            "domain",
+            "relationship",
+            "reasons",
+            "reason_list",
+            "confidence",
+            "approved",
+            "approved_at",
+        )
+        read_only_fields = (
+            "id",
+            "reasons",
+            "reason_list",
+            "confidence",
+            "approved",
+            "approved_at",
+        )
+
+    def get_reason_list(self, obj) -> list:
+        return list(obj.reasons or [])
+
+
+class CompetitorSerializer(serializers.ModelSerializer):
+    pulse = serializers.SerializerMethodField()
+    monitor_urls = serializers.SerializerMethodField()
+
+    class Meta:
+        model = "intelligence.Competitor"
+        fields = (
+            "id",
+            "name",
+            "homepage_url",
+            "domain",
+            "relationship",
+            "relationship_reasons",
+            "signals",
+            "first_seen_at",
+            "last_activity_at",
+            "created_at",
+            "pulse",
+            "monitor_urls",
+        )
+        read_only_fields = fields
+
+    def get_pulse(self, obj) -> dict:
+        from .services import feed as feed_service
+
+        return feed_service.pulse_for_competitor(obj)
+
+    def get_monitor_urls(self, obj) -> list:
+        return list(obj.monitor_set.values_list("url", flat=True)[:50]) if hasattr(obj, "monitor_set") else []
+
+
+class ApproveCandidateSerializer(serializers.Serializer):
+    candidate_id = serializers.UUIDField()
+    recipe = serializers.CharField(required=False, allow_blank=True)
+    workspace = serializers.UUIDField(required=False, allow_null=True)
+    check_interval = serializers.IntegerField(
+        required=False, allow_null=True, min_value=30, max_value=86400
+    )
+
+
+class DiscoverRequestSerializer(serializers.Serializer):
+    url = serializers.CharField()
+    workspace = serializers.UUIDField(required=False, allow_null=True)
+
+    def validate_url(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Enter your own site or product URL.")
         return value.strip()

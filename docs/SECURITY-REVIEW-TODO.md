@@ -95,6 +95,36 @@ still need a decision. See `SYSTEM_DOCUMENTATION.md` §3.6 and
       It is a link-ordering heuristic capped at 99. Review any future UI that
       surfaces it numerically, and keep Phase 2's competitor states
       descriptive ("pricing changed") rather than scored.
+- [x] **The extension credential's scope ceiling is enforced server-side.**
+      A `BrowserSession` token authenticates as the user, so "is this
+      authenticated?" is not enough. `intelligence/extension_auth.py`
+      holds `EXTENSION_ALLOWED_VIEWS`, a deny-by-default set of URL names
+      checked in the authentication class; anything unlisted is refused
+      with 401 before the view runs. Billing and reports are covered by
+      dedicated tests. A new endpoint is denied until it is deliberately
+      opened.
+- [x] **The extension token is hashed, expiring and revocable**, stored only
+      in `chrome.storage.local`, and shown exactly once. The package
+      contains no Stripe key, no SMTP credential and no Django secret, and
+      calls only the same `quick-monitor` endpoint the dashboard uses.
+- [x] **Agency branding cannot become stored XSS or SSRF.** It is validated
+      as plain text plus a hex colour, length-capped, rejected if it
+      contains `<` or `>`, and the server never fetches a logo URL. HTML and
+      XML exports escape it.
+- [x] **An agency plan only resolves once it is actually paid**
+      (`_organization_is_paid`), so a brand-new `Organization`'s default
+      `pro` plan cannot hand out paid entitlements for free. White-label
+      branding is gated on the same check.
+- [x] **Deactivating an agency never destroys client data.** `DELETE
+      /organizations/{id}/` sets `is_active=False`; workspaces, monitors
+      and reports survive, and a deactivated agency falls back to each
+      member's personal plan.
+- [x] **AI narration cannot leak identity or invent evidence.** Off by
+      default; inert without a provider. Only a derived evidence packet
+      (text already public at the source URL, plus rule names) leaves the
+      process. Every sentence must cite an evidence id that exists in that
+      packet, and the deterministic explanation is always stored
+      alongside the narration.
 - [ ] **Open — third-party page content becomes part of an email body.**
       Product names, prices and badges from a competitor page are included in
       the alert. `_transactional_html` escapes them, but confirm the plain-text

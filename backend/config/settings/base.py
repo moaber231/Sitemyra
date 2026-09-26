@@ -104,6 +104,7 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "accounts.api_key_auth.ApiKeyAuthentication",
+        "intelligence.extension_auth.ExtensionTokenAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
@@ -154,6 +155,12 @@ CELERY_BEAT_SCHEDULE = {
     "cleanup-expired-artifacts": {
         "task": "monitors.tasks.cleanup_expired_artifacts",
         "schedule": _daily_midnight,
+    },
+    # Market feed derivation (Phase 2). Idempotent by source_key, so an
+    # overlapping window on each tick is safe.
+    "derive-market-signals": {
+        "task": "intelligence.tasks.derive_signals",
+        "schedule": 900.0,
     },
     # Cached URL analyses are a cache of a fetch, not permanent history.
     # Twice-daily keeps the table bounded without a user noticing.
@@ -357,6 +364,22 @@ EMAIL_REPLY_TO = [
 # Dev-only bypasses: STRIPE_DEV_STUB, STRIPE_DEV_SKIP_WEBHOOK_VERIFY —
 # honoured only when DEBUG is on. OAuth needs no bypass: unconfigured
 # providers report disabled via /api/auth/oauth/status/.
+# Optional AI narration (Phase 3). ALL EMPTY = disabled, which is the
+# default and the shipped configuration.
+#
+# Sitemyra's product works fully without these: every change already has a
+# deterministic explanation built from stored evidence. Narration is an
+# extra, user-opted-in paragraph, and it is only kept when every sentence
+# cites an evidence id that exists in the packet it was given — otherwise
+# it is discarded and the deterministic text is shown.
+#
+# Never expose AI_API_KEY to the frontend: it is read server-side only.
+AI_PROVIDER = os.getenv("AI_PROVIDER", "").strip().lower()
+AI_API_KEY = os.getenv("AI_API_KEY", "")
+AI_MODEL = os.getenv("AI_MODEL", "")
+AI_BASE_URL = os.getenv("AI_BASE_URL", "")
+AI_TIMEOUT_SECONDS = _env_int("AI_TIMEOUT_SECONDS", 20)
+
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_PRO = os.getenv("STRIPE_PRICE_PRO", "")

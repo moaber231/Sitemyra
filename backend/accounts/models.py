@@ -17,6 +17,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
+    # Phase 3: competitive-intelligence narration is OPT-IN. Off by
+    # default, and it has no effect at all unless a provider is configured.
+    # When off, Sitemyra makes no outbound AI request.
+    ai_narration_enabled = models.BooleanField(default=False)
+
     objects = UserManager()
 
     USERNAME_FIELD = "email"
