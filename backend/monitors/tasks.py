@@ -11,6 +11,13 @@ from django.utils import timezone
 
 from notifications.tasks import deliver_monitor_event
 
+# Intelligence import is safe here on purpose: this module is imported by
+# every API/beat/http process, so the import graph must stay clear of
+# Playwright. `intelligence.services.product_capture` imports only
+# django, bs4 and its own pure helpers — never monitors.advanced_tasks.
+from intelligence.services.product_capture import capture as capture_product
+from intelligence.models import ProductWatch
+
 from .models import AdvancedMonitorConfig, Monitor, MonitorCheck
 from .routing import enqueue_browser_check, enqueue_http_check
 from .services.change_detector import detect_change
@@ -218,15 +225,35 @@ def check_monitor(self, monitor_id):
 
     monitor.save(update_fields=update_fields)
 
-    if changed:
+    # Product intelligence (Phase 1): turn the bytes we ALREADY downloaded
+    # into a product snapshot + field-level changes. No extra request, no
+    # browser slot. Isolated so a capture bug can never fail a check.
+    #
+    # Cost: one PK-indexed lookup on the product_watch one-to-one, only on
+    # the checks of monitors that could have one. Negligible next to the
+    # HTTP fetch that just happened.
+    product_summary = {"status": "no_watch"}
+    if ProductWatch.objects.filter(monitor_id=monitor.id).exists():
+        product_summary = capture_product(
+            monitor,
+            check,
+            result.content,
+            result.content_type,
+        )
+
+    product_changed = bool(product_summary.get("changes"))
+
+    if changed or product_changed:
         _notify(monitor, check, "change")
 
     if was_failing:
         _notify(monitor, check, "recovery")
 
     return {
-        "status": "changed" if changed else "unchanged",
+        "status": "changed" if (changed or product_changed) else "unchanged",
         "monitor_id": str(monitor.id),
+        "product": product_summary.get("status", "skipped"),
+        "product_changes": len(product_summary.get("changes") or []),
     }
 
 # NOTE (Phase B): do NOT import .advanced_tasks here. That module pulls
@@ -432,6 +459,54 @@ def _prune_empty_dirs(totals) -> None:
         totals["dirs_pruned"] += 1
 
 
+def _prune_product_history(cutoffs, now, totals) -> None:
+    """Prune product snapshots + field changes past the plan retention.
+
+    ``ProductSnapshot.monitor_check`` cascades from ``MonitorCheck``, so
+    deleting a stale check already removes its snapshot. What this adds is
+    the other direction: a snapshot whose check is still live (a monitor
+    on a long cadence) would otherwise accumulate forever, and the change
+    timeline has to obey the same retention promise the plan makes for
+    checks and artifacts.
+
+    The newest snapshot per watch is always kept so the "current state"
+    panel never renders empty just because the last check is old.
+    """
+    from intelligence.models import ProductChange, ProductSnapshot
+
+    for watch in (
+        ProductWatch.objects.select_related("monitor")
+        .select_related("monitor__user")
+        .only(
+            "id",
+            "monitor_id",
+            "monitor__id",
+            "monitor__user__id",
+            "monitor__user__is_superuser",
+        )
+    ):
+        cutoff = cutoffs.get(str(watch.monitor_id))
+        if cutoff is None:
+            continue
+
+        newest_id = (
+            ProductSnapshot.objects.filter(product_watch=watch)
+            .order_by("-captured_at")
+            .values_list("id", flat=True)
+            .first()
+        )
+        stale_snapshots = ProductSnapshot.objects.filter(
+            product_watch=watch, captured_at__lt=cutoff
+        )
+        if newest_id is not None:
+            stale_snapshots = stale_snapshots.exclude(id=newest_id)
+        totals["product_snapshots_deleted"] += stale_snapshots.delete()[0]
+
+        totals["product_changes_deleted"] += ProductChange.objects.filter(
+            product_watch=watch, created_at__lt=cutoff
+        ).delete()[0]
+
+
 @shared_task(
     # Artifact sweep over all storage: bounded (env-tunable) so the daily
     # cleanup can never pin the http worker indefinitely.
@@ -463,6 +538,8 @@ def cleanup_expired_artifacts():
         "orphans_deleted": 0,
         "dirs_pruned": 0,
         "bytes_reclaimed": 0,
+        "product_snapshots_deleted": 0,
+        "product_changes_deleted": 0,
     }
 
     cutoffs = {}  # str(monitor_id) -> effective cutoff
@@ -512,16 +589,19 @@ def cleanup_expired_artifacts():
     # monitor deletes, rolled-back commits, failed deletes last run) —
     # then drop the directories they leave behind.
     _sweep_orphan_artifacts(cutoffs, now, totals)
+    _prune_product_history(cutoffs, now, totals)
     _prune_empty_dirs(totals)
 
     logger.info(
         "retention sweep: checks=%d diffs=%d files=%d orphans=%d "
-        "dirs=%d bytes=%d",
+        "dirs=%d bytes=%d product_snapshots=%d product_changes=%d",
         totals["checks_deleted"],
         totals["diffs_deleted"],
         totals["files_deleted"],
         totals["orphans_deleted"],
         totals["dirs_pruned"],
         totals["bytes_reclaimed"],
+        totals["product_snapshots_deleted"],
+        totals["product_changes_deleted"],
     )
     return totals

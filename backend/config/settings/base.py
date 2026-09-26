@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "notifications",
     "workspaces",
     "billing",
+    "intelligence",
     "ops",
     "common",
 ]
@@ -108,6 +109,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    # Scoped rate limit for the unauthenticated marketing demo
+    # (intelligence.views.public_analyze). Scoped, not global: adding
+    # DEFAULT_THROTTLE_RATES does not throttle any existing endpoint
+    # because no other view declares a throttle class.
+    "DEFAULT_THROTTLE_RATES": {
+        "public_analyze": os.getenv("PUBLIC_ANALYZE_RATE", "12/hour"),
+    },
 }
 
 SIMPLE_JWT = {
@@ -146,6 +154,12 @@ CELERY_BEAT_SCHEDULE = {
     "cleanup-expired-artifacts": {
         "task": "monitors.tasks.cleanup_expired_artifacts",
         "schedule": _daily_midnight,
+    },
+    # Cached URL analyses are a cache of a fetch, not permanent history.
+    # Twice-daily keeps the table bounded without a user noticing.
+    "expire-url-analyses": {
+        "task": "intelligence.tasks.expire_url_analyses",
+        "schedule": crontab(hour="3,15", minute=20),
     },
 }
 

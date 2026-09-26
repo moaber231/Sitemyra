@@ -19,56 +19,57 @@ import {
 } from "lucide-react";
 
 import { DemoMonitor } from "@/components/marketing/demo-monitor";
+import { UrlDemo } from "@/components/marketing/url-demo";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { StructuredData } from "@/components/marketing/structured-data";
 import { marketingMetadata } from "@/lib/marketing-seo";
 
 export const metadata = marketingMetadata({
-  title: "Sitemyra — Know when your competitors change.",
+  title: "Sitemyra — Know when your competitors move.",
   description:
-    "Sitemyra monitors competitor pricing, pages, and content automatically and alerts you when something changes.",
+    "Paste a competitor or product URL. Sitemyra reads the page, finds what is worth watching, and tells you what changed, why it might matter, and where the evidence is.",
   path: "/",
 });
 
 const workflow = [
   {
     number: "01",
-    title: "Add a competitor page",
-    text: "Choose a public pricing, product, or content page you want to keep an eye on.",
+    title: "Paste a URL",
+    text: "Give Sitemyra a competitor or product URL. No selectors, no intervals, no setup.",
   },
   {
     number: "02",
-    title: "Sitemyra checks it",
-    text: "Scheduled checks compare the page using the monitoring mode you choose.",
+    title: "Sitemyra understands it",
+    text: "We read the page and find the pricing, product, feature and changelog pages worth watching.",
   },
   {
     number: "03",
-    title: "Get alerted",
-    text: "Review the result in your dashboard and receive an email or webhook alert.",
+    title: "Know what changed",
+    text: "Get told what moved, why it might matter, and exactly where the evidence is.",
   },
 ];
 
 const capabilities = [
   {
+    icon: ScanSearch,
+    title: "Product tracking",
+    text: "Price, sale price, discount, availability, variants, ratings and shipping — read from the page's own product data.",
+  },
+  {
     icon: FileSearch,
-    title: "Content changes",
-    text: "Use HTTP checks to notice meaningful content changes and record response status for review.",
+    title: "Pricing and plans",
+    text: "Follow published prices, plan changes and promotions, with a before and after for every move.",
   },
   {
     icon: Code2,
-    title: "DOM changes",
-    text: "Compare selected page structure when you need a closer look at what changed.",
-  },
-  {
-    icon: ScanSearch,
-    title: "Visual changes",
-    text: "Capture screenshots and review visual differences on supported plans.",
+    title: "Features and changelogs",
+    text: "Watch capability lists and release notes so a new feature does not surprise you.",
   },
   {
     icon: Zap,
-    title: "Price changes",
-    text: "Track a selected price value and get a clear before-and-after example.",
+    title: "Marketing and hiring",
+    text: "Homepage positioning, offers, editorial output and open roles, all on one watchlist.",
   },
 ];
 
@@ -120,17 +121,17 @@ export default function HomePage() {
           <div>
             <div className="section-label">
               <span aria-hidden="true" />
-              Competitor and website monitoring
+              Competitive intelligence for small teams
             </div>
 
-            <h1 className="marketing-display relative mt-7 max-w-3xl text-[clamp(3.25rem,7vw,5.25rem)]">
-              Know when your competitors <span className="gradient-text">change.</span>
+            <h1 className="marketing-display relative mt-7 max-w-3xl text-[clamp(3rem,6.6vw,5rem)]">
+              Know when your competitors <span className="gradient-text">move.</span>
               <span className="gradient-underline" aria-hidden="true" />
             </h1>
 
             <p className="marketing-body-large mt-7 max-w-xl text-muted-foreground">
-              Monitor competitor pricing, pages, and content automatically. Get
-              alerted when something changes.
+              Paste a competitor or product URL. Sitemyra reads the page, works out what is
+              worth watching, and explains what changed — with the evidence attached.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -146,15 +147,15 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <Check size={14} className="text-accent" aria-hidden="true" />
-                Free plan available
+                Paste a URL — no configuration
               </span>
               <span className="inline-flex items-center gap-2">
                 <Check size={14} className="text-accent" aria-hidden="true" />
-                No credit card to start
+                Every alert shows its source
               </span>
               <span className="inline-flex items-center gap-2">
                 <Check size={14} className="text-accent" aria-hidden="true" />
-                Publicly accessible pages
+                Publicly accessible pages only
               </span>
             </div>
           </div>
@@ -162,7 +163,11 @@ export default function HomePage() {
           <HeroVisual />
         </div>
 
-        <div className="relative mx-auto mt-20 max-w-6xl">
+        <div className="relative mx-auto mt-16 max-w-6xl">
+          <UrlDemo />
+        </div>
+
+        <div className="relative mx-auto mt-6 max-w-6xl">
           <DemoMonitor />
         </div>
       </section>
@@ -230,11 +235,12 @@ export default function HomePage() {
               What you can monitor
             </div>
             <h2 id="features-heading" className="mt-5 text-4xl sm:text-6xl">
-              Choose the level of detail that fits the question.
+              It reads the page, then tells you what moved.
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground">
-              Start with a simple content check. Add visual, DOM, or price
-              detail when the question calls for it.
+              Sitemyra understands the structure of a product page, a pricing page and a
+              changelog, so the alerts you get are about the business — not about a byte
+              changing in a stylesheet.
             </p>
           </div>
 
@@ -429,11 +435,11 @@ export default function HomePage() {
           </div>
           <ShieldCheck size={30} strokeWidth={1.6} className="mx-auto mt-8 text-accent" aria-hidden="true" />
           <h2 className="mt-6 text-4xl sm:text-6xl">
-            Stop checking competitor pages manually.
+            Stop refreshing competitor tabs.
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-            Start with the Free plan and build a watchlist that gives you a
-            clearer view of the market.
+            Start with the Free plan, paste one URL, and let Sitemyra tell you what changed
+            while you get on with your day.
           </p>
           <Link href="/register" className="apeiro-btn apeiro-btn-primary mt-8">
             Create your free account

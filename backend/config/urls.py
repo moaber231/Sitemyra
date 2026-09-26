@@ -85,5 +85,6 @@ urlpatterns = [
     path("api/monitors/", include("monitors.urls")),
     path("api/workspaces/", include("workspaces.urls")),
     path("api/billing/", include("billing.urls")),
+    path("api/intelligence/", include("intelligence.urls")),
     path("api/admin/", include("ops.urls")),
 ]

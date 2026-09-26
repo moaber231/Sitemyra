@@ -10,15 +10,18 @@
 
 | Check | Result |
 |-------|--------|
-| Backend test suite | **220 tests, all passing** (~63 s) — run via `docker compose run --rm celery-browser-worker python manage.py test accounts monitors notifications billing common` (the browser image contains pixelmatch, which some monitor tests import; the API image intentionally does not) |
-| Frontend type check / build | `npx tsc --noEmit` clean; `npm run build` exit 0 (19 routes) |
+| Backend test suite | **359 tests, all passing** (~99 s) — run via `docker compose run --rm celery-browser-worker python manage.py test accounts monitors notifications billing common workspaces ops intelligence` (the browser image contains pixelmatch, which some monitor tests import; the API image intentionally does not). 221 pre-existing + 138 new in `intelligence` |
+| Frontend type check / build | `npx tsc --noEmit` clean; `npm run build` exit 0 (31 routes) |
+| Competitive-intelligence journey (live) | Registered → analysed a real public storefront over HTTP → activated 3 monitors (free-plan clamp reported) → product snapshot captured with evidence → analysis cache hit. Verified against `books.toscrape.com` |
 | API image isolation | `import config.wsgi` OK with Playwright blocked by a `sys.meta_path` blocker; `import playwright`/`pixelmatch` → `ModuleNotFoundError` in the API image |
 | Version control | Git repository, branch `main`, remote `github.com/moaber231/Sitemyra` |
 | Integration claims | Every "implemented" claim below was verified against source in this revision |
 
 > **Companion documents.** `docs/OPTIMIZATION-PLAN.md` (the executed
-> optimization mission), `docs/BROWSER-WORKER.md` (Chromium worker
-> internals, SSRF residuals, driver-thread design), `docs/RESOURCE-BUDGET.md`
+> optimization mission), `docs/INTELLIGENCE-ROADMAP.md` (competitive-
+> intelligence roadmap, phases 1–6, with the audit of what already
+> existed), `docs/BROWSER-WORKER.md` (Chromium worker internals, SSRF
+> residuals, driver-thread design), `docs/RESOURCE-BUDGET.md`
 > (measured resource numbers and method), `docs/FREE-TIER-DEPLOYMENT.md`
 > (why no free-tier claim is made yet).
 
@@ -96,8 +99,8 @@ All routes are client-rendered.
 | `/auth/callback` | `app/auth/callback/page.tsx` | OAuth redirect target; exchanges `code`/`state` for a JWT |
 | `/dashboard` | `app/dashboard/page.tsx` | Overview: stat cards, live monitor list (30 s refetch) |
 | `/dashboard/monitors` | `app/dashboard/monitors/page.tsx` | Monitor list |
-| `/dashboard/monitors/new` | `app/dashboard/monitors/new/page.tsx` | Create form (name/URL/interval/timeout) |
-| `/dashboard/monitors/[id]` | `app/dashboard/monitors/[id]/page.tsx` | Detail page with `AdvancedMonitoringSection` |
+| `/dashboard/monitors/new` | `app/dashboard/monitors/new/page.tsx` | **URL intelligence intake** (paste a URL → see what was discovered → Monitor everything / Customize). Reads `?url=` for the bookmarklet hand-off. The previous name/interval/timeout form is preserved as `ManualMonitorForm` behind an "Advanced" disclosure |
+| `/dashboard/monitors/[id]` | `app/dashboard/monitors/[id]/page.tsx` | Detail page: Overview, **Product** (appears only when the monitor has a product watch), Monitoring, Changes, Alerts |
 | `/dashboard/monitors/[id]/diffs/[diffId]` | `…/diffs/[diffId]/page.tsx` | Single diff view and artifact download |
 | `/dashboard/settings` | `app/dashboard/settings/page.tsx` | Email preferences and channel cards |
 | `/dashboard/onboarding` | `app/dashboard/onboarding/page.tsx` | 3-step wizard |
@@ -123,13 +126,23 @@ Route-level UX: `loading.tsx` skeletons under `/dashboard`, plus `global-error.t
 | `AppShell` / `Sidebar` / `Topbar` / `AccountMenu` | `layout/` | Navigation shell |
 | `DashboardHeader` | `navigation/DashboardHeader.tsx` | Page header used across dashboard pages |
 | `Modal`, `BackButton`, `Button` | `ui/` | Primitives |
+| `UrlIntake` | `intelligence/url-intake.tsx` | The one-field primary control, shared by the dashboard and the marketing demo |
+| `AnalysisResult` | `intelligence/analysis-result.tsx` | Post-analysis journey: headline, product card, recipe picker, target checklist, activation, post-activation summary |
+| `TargetChecklist`, `RecipePicker` | `intelligence/` | Grouped/filterable discovered pages (each with its rationale) and the one-click recipes |
+| `ProductWatchPanel`, `ProductWatch` | `intelligence/` | Current product state, the change explanation card, the change timeline, and the monitor's Product tab |
+| `ManualMonitorForm` | `intelligence/manual-monitor-form.tsx` | The original name/URL/interval/timeout form, preserved unchanged |
+| `SpyThisPage` | `intelligence/spy-this-page.tsx` | Draggable "Monitor with Sitemyra" bookmarklet. **No token in the browser** — it only opens the app with the current URL |
+| `UrlDemo` | `marketing/url-demo.tsx` | Homepage try-it: real analysis through the public endpoint, plus a clearly-labelled illustrative example |
+| `primitives.tsx` | `intelligence/primitives.tsx` | Severity/confidence badges and shared formatting. Descriptive states only — no numeric health scores |
 | `QueryProvider` | `providers/query-provider.tsx` | Single `QueryClient` (`staleTime` 30 s, `retry: 1`) mounted in `app/layout.tsx` with the global `Toaster` |
 
 ### 2.3 State, API layer, and styling
 
-- **Transport.** `lib/api/client.ts` exposes `apiFetch`, a thin `fetch` wrapper. Domain modules: `auth.ts`, `monitors.ts`, `advanced.ts` (config, diffs, prices, artifact download), `notifications.ts`, `workspaces.ts`, `billing.ts`, `developer.ts` (API keys/OAuth/onboarding), `ops.ts` (metrics/diagnostics/compliance).
+- **Transport.** `lib/api/client.ts` exposes `apiFetch`, a thin `fetch` wrapper. Domain modules: `auth.ts`, `monitors.ts`, `advanced.ts` (config, diffs, prices, artifact download), `notifications.ts`, `workspaces.ts`, `billing.ts`, `developer.ts` (API keys/OAuth/onboarding), `ops.ts` (metrics/diagnostics/compliance), and `intelligence.ts` (analyze, public analyze, activate, quick-monitor, recipes, product watches, monitor product). Two call styles coexist: older modules take an explicit `accessToken`; newer ones (including all of `intelligence.ts`) rely on `apiFetch` reading `sessionStorage`.
 - **Auth handling.** JWT access token in `sessionStorage` (`apeiro_access`), refresh token in `apeiro_refresh`. `apiFetch` attaches `Authorization: Bearer`, retries once after a silent refresh on 401, then clears the session and throws "session has expired". Tokens are never written to `localStorage`, and no Django secret exists in frontend environment variables (only `NEXT_PUBLIC_API_URL`).
 - **Data fetching.** React Query (`useQuery` with 30 s polling on the dashboard, `useMutation` for saves) mixed with plain `useEffect` + `useState` on several CRUD pages — a known inconsistency (§5.5).
+- **Suspense.** `/dashboard/monitors/new` reads `useSearchParams` (bookmarklet hand-off) inside a `<Suspense>` boundary so the route stays statically prerendered; Next 15 requires this.
+- **Fetched competitor content is never rendered as HTML.** Every value Sitemyra read from a competitor page is passed to React as text. No `dangerouslySetInnerHTML` anywhere in the intelligence components.
 - **Styling.** Dark-only theme (`color-scheme: dark` in `app/globals.css`). Tailwind v4 `@theme inline` maps semantic tokens (`background`, `card`, `accent`, `success/warning/danger` plus muted variants) to CSS variables; components use the `apeiro-card`, `apeiro-btn`, `apeiro-input`, `apeiro-badge` utilities and `animate-apeiro-*` animations.
 
 ---
@@ -140,7 +153,7 @@ Route-level UX: `loading.tsx` skeletons under `/dashboard`, plus `global-error.t
 
 ### 3.1 Applications and authentication
 
-**Django apps** (registered in `config/settings/base.py`): `accounts` (auth, OAuth, API keys), `monitors`, `notifications`, `workspaces`, `billing`, `ops` (super-admin telemetry), `common` (crypto helpers, artifact storage, integration status).
+**Django apps** (registered in `config/settings/base.py`): `accounts` (auth, OAuth, API keys), `monitors`, `notifications`, `workspaces`, `billing`, `intelligence` (URL analysis, discovered targets, product tracking, change explanations), `ops` (super-admin telemetry), `common` (crypto helpers, artifact storage, integration status).
 
 **Authentication classes** (`REST_FRAMEWORK.DEFAULT_AUTHENTICATION_CLASSES`, order matters):
 
@@ -158,6 +171,7 @@ Route-level UX: `loading.tsx` skeletons under `/dashboard`, plus `global-error.t
 | `/api/notifications/` | `preferences/` (GET/PATCH), `channels/` (GET/POST), `channels/<uuid>/` (GET/PUT/DELETE), `channels/<uuid>/test/` (POST) | Plan channel caps; workspace webhooks are Owner/Admin-only |
 | `/api/workspaces/` | CRUD, `members/` (GET/POST role change), `members/<id>` (DELETE), `invites/` (GET/POST), `invites/<token>/accept/` | Owner auto-membership; the Owner role is not grantable by invite |
 | `/api/billing/` | `plans/`, `subscription/`, `checkout/`, `portal/`, `webhook/` (CSRF-exempt) | Stub responses without keys; signature-verified when `STRIPE_WEBHOOK_SECRET` is set |
+| `/api/intelligence/` | `analyze/` (POST), `public/analyze/` (POST, unauthenticated + throttled), `activate/` (POST), `quick-monitor/` (POST), `recipes/` (GET), `product-watches/` (GET), `product-watches/<uuid>/` (GET), `product-watches/<uuid>/timeline/` (GET), `monitors/<uuid>/product/` (GET) | See §3.6. Cross-tenant reads return 404, never 403 |
 | `/api/admin/` | `metrics/` (GET), `diagnostics/` (GET, POST to run a live dispatch test) | `IsAdminUser` (staff/superuser) only |
 
 ### 3.3 Data models (UUID primary keys throughout)
@@ -173,6 +187,11 @@ Route-level UX: `loading.tsx` skeletons under `/dashboard`, plus `global-error.t
 | `PricePoint` | `monitors/models.py` | `price` (`Decimal`), `currency`, `raw_value`, 1:1 check link |
 | `NotificationPreference`, `NotificationEvent` (change/failure/recovery, unique per check), `AlertChannel` (slack/discord/email/webhook/sms, `config_encrypted`), `MonitorAlertChannel` (assignment), `NotificationDelivery` (per-attempt log) | `notifications/models.py` | Secrets encrypted through `common.crypto.EncryptedTextField` (Fernet key derived from `DJANGO_SECRET_KEY`) |
 | `Subscription` (free/pro/business; active/trialing/past_due/canceled/incomplete; `mrr_cents`, Stripe IDs), `StripeWebhookEvent` | `billing/models.py` | `PLAN_LIMITS`, `PLAN_MRR_CENTS` (Pro $19, Business $49) |
+| `UrlAnalysis` | `intelligence/models.py` | Cached per-user analysis: `normalized_url`, `page_kind`, `classification_confidence` + `classification_rationale`, `facts` JSON (`{field: {value, method, raw}}`), `summary` JSON, `product_detected`, `expires_at` |
+| `DiscoveredTarget` | `intelligence/models.py` | A monitoring suggestion: `kind`, `label`, `why` (the observable signal), `confidence`, `relevance` (1–99 ordering heuristic, **not** a score), `is_product`, `is_primary`; unique per `(analysis, url)` |
+| `ProductWatch` | `intelligence/models.py` | OneToOne to `Monitor` (CASCADE) — product name, brand, currency, `product_detected`, `detection_note`, first/last seen |
+| `ProductSnapshot` | `intelligence/models.py` | Observed product state for one check: price, list price, currency, availability, rating, review count, description, badges/variants/images/bundles/specs/shipping JSON, plus `extraction` (method per field) and `evidence` (raw text per field) |
+| `ProductChange` | `intelligence/models.py` | Timeline row: `field`, `before`, `after`, `severity` (informational/minor/important/critical), `category`, `basis` (the human reason), `rule` (e.g. `rule:price`), `evidence`, `source_url` |
 
 ### 3.4 Plan limits and enforcement
 
@@ -190,7 +209,8 @@ Enforcement points: monitor creation checks `max_monitors` (HTTP 402 with an upg
 Celery beat (settings/base.py CELERY_BEAT_SCHEDULE)
   ├─ every 60 s   → monitors.tasks.schedule_due_monitors (batched, SCHEDULER_BATCH_SIZE=500)
   ├─ Mon 09:00 UTC → notifications.tasks.send_weekly_digests (crontab, not a float interval)
-  └─ daily 00:00  → monitors.tasks.cleanup_expired_artifacts
+  ├─ 03:20 & 15:20 → intelligence.tasks.expire_url_analyses (drops cached analyses past 2× TTL)
+  └─ daily 00:00  → monitors.tasks.cleanup_expired_artifacts (also prunes ProductSnapshot/ProductChange)
         ↓ (single-hop: the scheduler locks/advances each row, then enqueues directly)
 Redis broker — three queues:
   celery_http          → celery-http-worker  (no Chromium): monitors.tasks.check_monitor
@@ -215,7 +235,98 @@ notifications.services.deliver_monitor_event.delay(...)  →  celery_notificatio
 - **Digest.** `send_weekly_digests` aggregates per-user uptime %, average latency, and price drift over the trailing 7 days.
 - **Legacy path.** `queue_notification`, `send_notification_email`, and `dispatch_webhooks` remain as a secondary/queued path (covered by tests); new code should call `dispatch_monitor_event`.
 
-### 3.6 Engine comparison
+### 3.6 Competitive intelligence layer (`intelligence`)
+
+**What it is.** A thin, evidence-first layer on top of the existing
+monitoring engine. It adds no crawler, no queue and no browser: every
+intelligence row is produced either by an analysis the user explicitly
+requested, or from bytes the HTTP worker had already downloaded.
+
+```
+intelligence/services/
+  urls.py            normalize_url, registrable_domain, same_origin/same_site,
+                     path exclusion (pure)
+  page_facts.py      HTML → {field: {value, method, raw}}. JSON-LD (incl. @graph
+                     and malformed blocks), microdata, OpenGraph, then
+                     token-matched price/stock heuristics for storefronts with
+                     no structured data. Records WHY a page was judged a product
+                     page. (pure)
+  classify.py        page kind + rationale from URL tokens, extractor signals and
+                     link text; same-origin target discovery with a relevance
+                     ordering heuristic capped at 99 (pure)
+  product_diff.py    snapshot → snapshot diff, severity ladder, and the
+                     what/why/what-to-check explanation. Every rule is named
+                     and testable. No model call. (pure)
+  recipes.py         the eight one-click recipes (pure)
+  analysis.py        validate → fetch (reuses monitors' SSRF-hardened fetcher)
+                     → extract → classify → cache. The only networked module.
+  product_capture.py snapshot + change rows from one check's bytes. Never raises.
+  activation.py      targets/recipe → Monitors, with plan-limit clamping
+  targets.py         dict-or-model accessor for target shapes
+```
+
+**Key invariants**
+
+1. **Evidence, always.** A stored value is `{value, method, raw}`. A
+   `ProductChange` carries `before`, `after`, `rule`, `basis`, `source_url`
+   and `detected_at`. Nothing is asserted that the page did not publish.
+2. **No invented data.** A page with no price yields no price, and
+   `normalize_availability` returns `unknown` rather than `in_stock`.
+   Absence of a field is never a change.
+3. **Honest rationale.** The classification rationale quotes the signals
+   the extractor actually recorded. A heuristically-detected product page is
+   never described as if it had schema.org data.
+4. **No free requests.** A product watch runs on the bytes the check
+   already fetched, so it costs ~1–3 ms of parsing, not a second GET and not
+   a browser slot. This is what makes product tracking viable on Free.
+5. **Clamp, never fail.** Activation creates up to the plan's
+   `max_monitors` and reports the rest with `plan_limit` /
+   `already_monitored` / `invalid_url`. It does not 402 a one-click button.
+6. **Bounded bursts.** At most `IMMEDIATE_FIRST_CHECK_LIMIT = 2` first
+   checks are published on activation; the rest wait for the 60 s
+   scheduler tick, so a 20-page activation cannot fire 20 simultaneous
+   outbound requests.
+7. **Analysis caching.** An analysis younger than `ANALYSIS_TTL_MINUTES`
+   (6 h) is returned with `cached: true` and **no fetch at all** — the cache
+   is checked before the network call, not after. Re-pasting the same
+   competitor URL is free.
+
+**Plan-limit interaction.** `activate` clamps `check_interval` up to the
+plan's `min_interval_seconds` and to a supported `Monitor.INTERVAL_CHOICES`
+value, rather than raising the serializer's validation error the manual
+form produces. A Free account (3 URLs) activating a 14-target analysis
+gets 3 monitors and 11 explained skips.
+
+**Retention.** `ProductWatch` cascades from `Monitor`, so deleting a
+monitor removes all product history with no orphan job.
+`cleanup_expired_artifacts` additionally prunes `ProductSnapshot` and
+`ProductChange` past `min(plan history_days, ARTIFACT_RETENTION_DAYS)`,
+always keeping each watch's newest snapshot so "current state" never
+renders empty.
+
+**Alerts.** `notifications.services._build_subject_message` appends a
+`PRODUCT INTELLIGENCE` block to change alerts when — and only when — the
+monitor has a product watch. Monitors without one produce the byte-identical
+message as before. The block is assembled from stored `ProductChange` rows
+and is wrapped so intelligence can never break a notification.
+
+**Known limits (Phase 1, deliberate)**
+
+- No AI/LLM call anywhere on this path. Explanations are deterministic by
+  design; Phase 3 layers optional narration on top of these same records.
+- JavaScript-rendered storefronts with no structured data and no
+  price/stock-marked elements yield `product_detected: false`. The URL is
+  still monitorable as a content page; the UI says so plainly.
+- No competitor *discovery* yet (Phase 2), no feed (Phase 2), no exports of
+  product history (Phase 4).
+- `relevance` is a link-ordering heuristic, capped at 99 so the submitted
+  page (100, `is_primary`) can never tie with it. It is never presented as
+  a business or health score.
+- The public demo endpoint is throttled by `PUBLIC_ANALYZE_RATE` (default
+  `12/hour`, per IP). Adding `DEFAULT_THROTTLE_RATES` does not throttle any
+  other endpoint because no other view declares a throttle class.
+
+### 3.7 Engine comparison
 
 | | HTTP engine (`fetcher.py` + `normalizer.py`) | Browser engine (`browser_fetcher.py` + `dom_diff.py` / `screenshot_diff.py` / `price_extractor.py`) |
 |---|---|---|
@@ -306,6 +417,7 @@ Full annotated template: `.env.example`. `.env` is git-ignored and must never be
 | `STRIPE_DEV_STUB`, `STRIPE_DEV_SKIP_WEBHOOK_VERIFY` | Dev only | Billing test convenience | Honoured only when `DEBUG=True` |
 | `GOOGLE_CLIENT_ID/SECRET/REDIRECT_URI`, `GITHUB_CLIENT_ID/SECRET/REDIRECT_URI` | For real SSO | `accounts/oauth.py` | Empty = provider reported unavailable (503 on start) |
 | `OAUTH_STATE_TTL_SECONDS` | No | Signed state lifetime | Default 600 |
+| `PUBLIC_ANALYZE_RATE` | No | Rate limit for the **unauthenticated** marketing demo (`POST /api/intelligence/public/analyze/`) | Scoped DRF throttle on that one view; default `12/hour` per IP. No other endpoint is throttled |
 | `MINIO_ROOT_USER/PASSWORD` | If using dev MinIO | minio container | Dev only |
 
 ---
@@ -381,8 +493,13 @@ Unit economics: a single Business customer ($49) covers the single-VPS fleet; HT
 | 5 | `?format=` is unusable on the compliance export (DRF renderer 404); documented workaround is `?type=` | Low (docs) | XS |
 | 6 | Two notification paths coexist (`deliver_monitor_event` → `celery_notifications` primary, `queue_notification`/`dispatch_webhooks` legacy) | Low | S — consolidate |
 | 7 | Default `ALLOWED_HOSTS = ["*"]` in base settings; safe only because `production.py` overrides it from env | Low | XS |
+| 8 | Extraction cannot see JavaScript-rendered storefronts that publish neither structured data nor a price/stock-marked element. Such a URL is still monitorable as a content page, and the UI says "product data not detected" rather than guessing | Low (product limit) | M — optional browser-mode extraction in a later phase |
+| 9 | No AI/LLM call on the intelligence path. Every explanation is a deterministic rule in `intelligence/services/product_diff.py` — deliberate (see `docs/INTELLIGENCE-ROADMAP.md` Phase 3), and a hallucinated competitor price would be worse than "not detected" | By design | Phase 3 |
+| 10 | `intelligence` reads the page synchronously inside the analyze request (bounded by `MAX_ANALYSIS_TIMEOUT_SECONDS=30`). A slow competitor page therefore holds an API worker; the 6 h analysis cache keeps repeat pastes free | Low | S — move to a queued task with polling if abuse appears |
+| 11 | `GET /api/intelligence/product-watches/<id>/` and the timeline are not paginated (capped at 50/200 rows). Fine at Phase 1 volume; a cursor is specified in the Phase 2 feed design | Low | M |
+| 12 | The bookmarklet opens the intake page rather than calling the API directly. Deliberate — it keeps **zero** credentials in the browser. A Chromium extension with a scoped, revocable token is designed in Phase 6 | By design | Phase 6 |
 
-Completed since earlier revisions (no longer open): repository under git; artifact retention job **plus** `ARTIFACT_RETENTION_DAYS` cap, orphan sweep, monitor-delete prefix purge, named `artifact_data` volume; S3/MinIO backend; artifact download endpoint; **per-hop + subresource SSRF validation for the browser (CDP Fetch)**; **persistent browser pool with driver-thread isolation**; **queue split (`celery_http`/`celery_browser`/`celery_notifications`) with API image free of Playwright**; **multi-stage Dockerfile (api/browser targets)**; **notifications off the critical path**; **scheduler batching + 3 new indexes (`MonitorCheck.checked_at`, `Subscription(status, updated_at)`/stripe IDs)**; **monitor-list N+1 fix**; **digest byte-identical N+1 rewrite + Monday 09:00 crontab**; real OAuth authorization-code flow (no identity-bridge fallback); **`/api/health/` celery check replaced with a concurrency-safe Redis worker heartbeat (former inspect() broadcast wedged under concurrency and pinned DB connections — former gap #3, fixed with 17 regression tests; see `docs/RESOURCE-BUDGET.md` §6)**.
+Completed since earlier revisions (no longer open): repository under git; **Phase 1 competitive intelligence** (URL intake, target discovery, recipes, product tracking, explainable change history — §3.6, with 138 tests); artifact retention job **plus** `ARTIFACT_RETENTION_DAYS` cap, orphan sweep, monitor-delete prefix purge, named `artifact_data` volume; S3/MinIO backend; artifact download endpoint; **per-hop + subresource SSRF validation for the browser (CDP Fetch)**; **persistent browser pool with driver-thread isolation**; **queue split (`celery_http`/`celery_browser`/`celery_notifications`) with API image free of Playwright**; **multi-stage Dockerfile (api/browser targets)**; **notifications off the critical path**; **scheduler batching + 3 new indexes (`MonitorCheck.checked_at`, `Subscription(status, updated_at)`/stripe IDs)**; **monitor-list N+1 fix**; **digest byte-identical N+1 rewrite + Monday 09:00 crontab**; real OAuth authorization-code flow (no identity-bridge fallback); **`/api/health/` celery check replaced with a concurrency-safe Redis worker heartbeat (former inspect() broadcast wedged under concurrency and pinned DB connections — former gap #3, fixed with 17 regression tests; see `docs/RESOURCE-BUDGET.md` §6)**.
 
 ### 5.6 Extension points
 
@@ -392,6 +509,9 @@ Completed since earlier revisions (no longer open): repository under git; artifa
 - **Metered overages.** Stripe usage-based line items on top of the `checks_24h` metrics already exposed by ops.
 - **Enterprise SSO (SAML/OIDC).** Extend `OAuthAccount.provider` choices; JWT issuance is provider-agnostic.
 - **Scheduler batching and a browser pool** — both implemented in the optimization mission (§5.4, `docs/OPTIMIZATION-PLAN.md`).
+- **A new page kind or product field.** Add the kind to `_PATH_RULES`/`_TOKEN_RULES` and `KIND_LABELS` in `intelligence/services/classify.py`, the field to `_TRACKED_FIELDS` and `ProductSnapshot` in `intelligence/services/product_diff.py`, and a migration for the new column. The diff, severity, timeline, explanation, alert block and UI panels all read from those two tables, so nothing else needs changing.
+- **A new recipe.** One dict in `intelligence/services/recipes.py`. The picker, the API and the activation path are generic over the registry.
+- **Competitor discovery, market feed, market signals, exports and agency mode** — designed phase by phase, with the DB changes, failure modes and security notes for each, in `docs/INTELLIGENCE-ROADMAP.md`.
 
 ---
 

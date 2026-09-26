@@ -14,6 +14,7 @@ import {
   Hash,
   LayoutDashboard,
   Loader2,
+  Package,
   Pause,
   Pencil,
   Play,
@@ -29,12 +30,14 @@ import { AppShell } from "@/components/layout/app-shell";
 import { AdvancedMonitoringSection } from "@/components/monitors/advanced-monitoring-section";
 import { AdvancedConfigPanel } from "@/components/monitors/advanced-config";
 import { MonitorChannelManager } from "@/components/monitors/monitor-channels";
+import { ProductWatchPanel } from "@/components/intelligence/product-watch";
 import { DashboardHeader } from "@/components/navigation/DashboardHeader";
 import {
   AlertChannels,
   buildAlertChannels,
 } from "@/components/observability/alert-channels";
 import { Modal } from "@/components/ui/modal";
+import { getMonitorProduct } from "@/lib/api/intelligence";
 import {
   deleteMonitor,
   getMonitor,
@@ -54,10 +57,13 @@ type MonitorStatus =
   | "paused"
   | "never_checked";
 
-type TabId = "overview" | "monitoring" | "changes" | "alerts";
+type TabId = "overview" | "product" | "monitoring" | "changes" | "alerts";
 
-const TABS: { id: TabId; label: string; icon: typeof LayoutDashboard }[] = [
+// "Product" is appended conditionally (see hasProductWatch below): a monitor
+// that is not tracking a product must not advertise a tab it cannot fill.
+const BASE_TABS: { id: TabId; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "product", label: "Product", icon: Package },
   { id: "monitoring", label: "Monitoring", icon: ScanSearch },
   { id: "changes", label: "Changes", icon: FileDiff },
   { id: "alerts", label: "Alerts", icon: BellRing },
@@ -208,6 +214,17 @@ export default function MonitorDetailPage({
       timeout: String(monitor.timeout),
     });
   }, [monitor?.id, monitor?.name, monitor?.url]);
+
+  // Probe (not fetch-render): a 404 here simply means "no product watch",
+  // which is the normal case for a plain content monitor.
+  const { data: productData } = useQuery({
+    queryKey: ["monitor-product", monitorId],
+    queryFn: () => getMonitorProduct(monitorId!),
+    enabled: Boolean(accessToken && monitorId),
+    retry: false,
+  });
+  const hasProductWatch = Boolean(productData);
+  const TABS = BASE_TABS.filter((tab) => tab.id !== "product" || hasProductWatch);
 
   const refreshMonitor = async () => {
     await Promise.all([
@@ -642,6 +659,17 @@ export default function MonitorDetailPage({
                 </div>
               )}
             </section>
+          </div>
+        )}
+
+        {activeTab === "product" && hasProductWatch && (
+          <div
+            role="tabpanel"
+            id="panel-product"
+            aria-labelledby="tab-product"
+            className="animate-apeiro-fade-up space-y-6"
+          >
+            <ProductWatchPanel monitorId={monitorId!} />
           </div>
         )}
 

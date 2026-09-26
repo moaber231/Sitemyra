@@ -1,6 +1,10 @@
 # Sitemyra
 
-Website monitoring that tells you what changed.
+Competitive intelligence that starts with a URL.
+
+Paste a competitor or product URL. Sitemyra reads the page, decides what
+is worth watching, and tells you what changed — with the source, the
+timestamp and the before/after attached to every claim.
 
 ## What's in the box
 
@@ -10,8 +14,59 @@ Website monitoring that tells you what changed.
 - Redis for Celery messaging
 - Celery workers: a lightweight **HTTP worker** (queues `celery_http` + `celery_notifications`, no Chromium), a dedicated **browser worker** (queue `celery_browser`, concurrency 1, one Chromium per prefork child), and Celery beat
 - Team workspaces/RBAC, Stripe billing, alert channels, compliance export, onboarding
+- **Competitive intelligence** (`intelligence` app): URL analysis, discovered monitoring targets, monitoring recipes, product tracking, and explainable field-level change history
 
-Monitoring checks run fully without Chromium for 16 of 19 features; only the `dom`, `price` and `screenshot` modes execute in the isolated browser worker. See `SYSTEM_DOCUMENTATION.md` for architecture and `docs/BROWSER-WORKER.md` for the browser-worker internals.
+Monitoring checks run fully without Chromium for 16 of 19 features; only the `dom`, `price` and `screenshot` modes execute in the isolated browser worker. See `SYSTEM_DOCUMENTATION.md` for architecture, `docs/INTELLIGENCE-ROADMAP.md` for the competitive-intelligence roadmap, and `docs/BROWSER-WORKER.md` for the browser-worker internals.
+
+## Competitive intelligence (Phase 1, shipped)
+
+The intake flow is the product. `/dashboard/monitors/new` asks for one
+thing — a URL — and then:
+
+1. **Analyses the page.** JSON-LD, microdata, OpenGraph, and (for
+   storefronts with no structured data) token-matched price and stock
+   elements. Every value is stored with the method that read it and the
+   raw text it came from.
+2. **Classifies it** as product / pricing / features / changelog /
+   careers / … and **discovers** the other same-origin pages worth
+   watching. Each suggestion states the observable signal behind it.
+3. **Activates** them in one click, or lets the user pick a recipe
+   (Pricing, Product, Feature, Marketing, SEO, Hiring, E-commerce,
+   Everything) or hand-pick pages.
+4. **Tracks product data** on the product page: price, list price,
+   discount, currency, availability, stock status, variants, sizes,
+   colours, images, rating, review count, badges, bundles, shipping and
+   specifications.
+5. **Explains every change** as what changed / why it may matter / what
+   to check, with severity, the rule that classified it, the source URL
+   and the detection time.
+
+Two design decisions worth knowing:
+
+- **A product watch costs no extra request.** The HTTP worker already
+  downloads the page for the content hash; product extraction runs on
+  those same bytes. No second fetch, no browser slot.
+- **No model call on this path.** Every explanation is produced by a
+  named, tested rule in `intelligence/services/product_diff.py`. Optional
+  AI narration layers on top of exactly these records in Phase 3 and
+  never replaces them.
+
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `POST /api/intelligence/analyze/` | user | Analyse a URL, cache the result, return facts + discovered targets |
+| `POST /api/intelligence/public/analyze/` | none (throttled by `PUBLIC_ANALYZE_RATE`) | Homepage demo. Redacted, never persisted, no user reference |
+| `POST /api/intelligence/activate/` | user | Create monitors from selected targets or a recipe |
+| `POST /api/intelligence/quick-monitor/` | user | Feature 7 one-shot: analyse + activate. Idempotent |
+| `GET /api/intelligence/recipes/` | user | Recipe catalogue |
+| `GET /api/intelligence/product-watches/` | user | List tracked products |
+| `GET /api/intelligence/product-watches/{id}/` | user | Watch + current snapshot + timeline + explanation |
+| `GET /api/intelligence/product-watches/{id}/timeline/` | user | Field-change timeline, filterable by severity/category |
+| `GET /api/intelligence/monitors/{id}/product/` | user | Product state for one monitor (404 when there is none) |
+
+"Monitor this page" works today as a bookmarklet with **no token in the
+browser**: `frontend/public/sitemyra-bookmarklet.js` only opens Sitemyra
+with the current URL, and sign-in happens in the app. A Chromium
+extension is designed in Phase 6 of the roadmap.
 
 ## Run locally
 

@@ -113,6 +113,86 @@ def _record_event(monitor, check, event_type):
         return event, False
 
 
+def _product_intelligence_block(monitor, check):
+    """Product-change summary for a change alert, or ``""``.
+
+    Purely additive: a monitor without a product watch returns an empty
+    string, so every existing alert body stays byte-identical.
+
+    The block is assembled from stored ``ProductChange`` rows only —
+    before/after, the rule that classified them, the source URL and the
+    detection time. It never asserts anything the rows do not contain.
+    """
+    try:
+        from intelligence.models import ProductChange
+        from intelligence.services.product_diff import (
+            explain,
+            format_change_line,
+        )
+
+        watch = getattr(monitor, "product_watch", None)
+        if watch is None:
+            return ""
+
+        rows = list(
+            ProductChange.objects.filter(
+                product_watch=watch, monitor_check=check
+            ).order_by("-created_at")[:6]
+        )
+        if not rows:
+            return ""
+
+        payload = [
+            {
+                "field": row.field,
+                "label": row.label,
+                "before": row.before,
+                "after": row.after,
+                "severity": row.severity,
+                "category": row.category,
+                "rule": row.rule,
+                "basis": row.basis,
+                "source_url": row.source_url,
+            }
+            for row in rows
+        ]
+        explanation = explain(payload, product_name=watch.name)
+        currency = watch.currency or ""
+
+        lines = [
+            "",
+            "PRODUCT INTELLIGENCE",
+            f"Product: {watch.name}",
+            "",
+            "WHAT CHANGED",
+        ]
+        for change in payload:
+            lines.append(f"- {format_change_line(change, currency)}")
+        if explanation.get("why_it_may_matter"):
+            lines.extend(["", "WHY IT MAY MATTER", explanation["why_it_may_matter"]])
+        if explanation.get("what_to_check"):
+            lines.extend(["", "WHAT TO CHECK", explanation["what_to_check"]])
+        lines.extend(
+            [
+                "",
+                "EVIDENCE",
+                f"Source: {rows[0].source_url or monitor.url}",
+                f"Detected: {rows[0].created_at}",
+                f"Confidence: {explanation.get('confidence', 'medium')}",
+                "Classification rules: "
+                + ", ".join(sorted({row.rule for row in rows if row.rule})),
+            ]
+        )
+        return "\n".join(lines)
+    except Exception:
+        # Intelligence must never break a notification.
+        logger.exception(
+            "notification product block isolated error [monitor_id=%s]",
+            getattr(monitor, "id", "?"),
+        )
+        return ""
+
+
 def _build_subject_message(monitor, check, event_type):
     dashboard_url = (
         f"{settings.FRONTEND_URL.rstrip('/')}/dashboard/monitors/{monitor.id}"
@@ -123,7 +203,8 @@ def _build_subject_message(monitor, check, event_type):
             f"A change was detected on {monitor.name}.\n\n"
             f"URL: {monitor.url}\n"
             f"Checked: {check.checked_at}\n"
-            f"Status: {check.status_code}\n\n"
+            f"Status: {check.status_code}\n"
+            f"{_product_intelligence_block(monitor, check)}\n"
             f"Review this monitor in Sitemyra: {dashboard_url}\n"
         )
     elif event_type == NotificationEvent.FAILURE:
