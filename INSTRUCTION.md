@@ -29,6 +29,7 @@ We are one team with three roles. No role is more important than another — the
   - `.env.example` — the full list of environment variables and what each one does.
   - `docs/BROWSER-WORKER.md`, `docs/RESOURCE-BUDGET.md`, `docs/FREE-TIER-DEPLOYMENT.md` — Chromium worker internals, measured resource numbers, and why we make no free-tier claim yet.
   - `docs/INTELLIGENCE-ROADMAP.md` — what Phase 1 shipped and exactly what Phases 2–6 will add.
+  - `docs/DEPLOY-PHASE1.md` — the Phase 1 release handoff: backup, the one new env var, the single migration, the smoke tests, and the verified rollback.
   - `INSTRUCTION.md` (this file) — how we collaborate.
 - **Repository:** `github.com/moaber231/Sitemyra`, branch `main`. Production deploys only from `main`.
 - **Two compose files, never mix them:**

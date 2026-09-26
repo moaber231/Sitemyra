@@ -16,7 +16,7 @@ timestamp and the before/after attached to every claim.
 - Team workspaces/RBAC, Stripe billing, alert channels, compliance export, onboarding
 - **Competitive intelligence** (`intelligence` app): URL analysis, discovered monitoring targets, monitoring recipes, product tracking, and explainable field-level change history
 
-Monitoring checks run fully without Chromium for 16 of 19 features; only the `dom`, `price` and `screenshot` modes execute in the isolated browser worker. See `SYSTEM_DOCUMENTATION.md` for architecture, `docs/INTELLIGENCE-ROADMAP.md` for the competitive-intelligence roadmap, and `docs/BROWSER-WORKER.md` for the browser-worker internals.
+Monitoring checks run fully without Chromium for 16 of 19 features; only the `dom`, `price` and `screenshot` modes execute in the isolated browser worker. See `SYSTEM_DOCUMENTATION.md` for architecture, `docs/INTELLIGENCE-ROADMAP.md` for the competitive-intelligence roadmap, `docs/DEPLOY-PHASE1.md` for the Phase 1 release handoff, and `docs/BROWSER-WORKER.md` for the browser-worker internals.
 
 ## Competitive intelligence (Phase 1, shipped)
 
