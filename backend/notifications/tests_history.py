@@ -1,4 +1,5 @@
 from django.urls import reverse
+from unittest.mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -81,6 +82,23 @@ class NotificationHistoryTests(APITestCase):
             self.client.get(reverse("notification-history")).status_code,
             status.HTTP_401_UNAUTHORIZED,
         )
+
+    def test_preferences_expose_only_boolean_email_readiness(self):
+        self.client.force_authenticate(self.owner)
+        env = {
+            "EMAIL_HOST": "smtp.example.test",
+            "EMAIL_PORT": "465",
+            "EMAIL_HOST_USER": "alerts@example.test",
+            "EMAIL_HOST_PASSWORD": "",
+            "EMAIL_FROM": "alerts@example.test",
+        }
+        with patch.dict("os.environ", env, clear=False):
+            response = self.client.get(reverse("notification-preferences"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["email_delivery_configured"])
+        self.assertNotIn("EMAIL_HOST_PASSWORD", response.data)
+        self.assertNotIn("smtp.example.test", str(response.data))
 
     def test_workspace_members_can_read_workspace_delivery_history(self):
         workspace = Workspace.objects.create(name="Shared", owner=self.owner)

@@ -5,6 +5,7 @@ export type NotificationPreferences = {
   email_on_failure: boolean;
   email_on_recovery: boolean;
   email_weekly_digest: boolean;
+  email_delivery_configured: boolean;
 };
 
 export type NotificationDeliveryHistory = {

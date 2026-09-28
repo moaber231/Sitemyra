@@ -9,6 +9,8 @@ from .models import (
 
 
 class NotificationPreferenceSerializer(serializers.ModelSerializer):
+    email_delivery_configured = serializers.SerializerMethodField()
+
     class Meta:
         model = NotificationPreference
         fields = (
@@ -16,7 +18,14 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
             "email_on_failure",
             "email_on_recovery",
             "email_weekly_digest",
+            "email_delivery_configured",
         )
+        read_only_fields = ("email_delivery_configured",)
+
+    def get_email_delivery_configured(self, _obj):
+        from common.integration_status import smtp_missing_environment
+
+        return not smtp_missing_environment()
 
 
 class AlertChannelSerializer(serializers.ModelSerializer):

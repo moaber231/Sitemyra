@@ -22,6 +22,7 @@ const defaults: NotificationPreferences = {
   email_on_failure: true,
   email_on_recovery: true,
   email_weekly_digest: true,
+  email_delivery_configured: false,
 };
 
 const PREFERENCES: {
@@ -96,7 +97,9 @@ export default function SettingsPage() {
     preferences.email_on_failure ||
     preferences.email_on_recovery;
 
-  const alertChannels = buildAlertChannels({ email: emailActive });
+  const alertChannels = buildAlertChannels({
+    email: emailActive && Boolean(data?.email_delivery_configured),
+  });
 
   return (
     <AppShell>
@@ -115,7 +118,11 @@ export default function SettingsPage() {
 
       <div id="alerts" className="scroll-mt-24">
         <AlertChannels
-          description="Route Sitemyra alerts to the channels you trust. Email uses your account address when the server SMTP configuration is complete; connect Slack and Discord webhooks from Alert Channels."
+          description={
+            data?.email_delivery_configured
+              ? "Route Sitemyra alerts to the channels you trust. Email uses your account address; connect Slack and Discord webhooks from Alert Channels."
+              : "Email is NOT CONFIGURED on this server, so saved email preferences will not deliver messages yet. Connect Slack or Discord from Alert Channels."
+          }
           channels={alertChannels}
         />
       </div>
@@ -133,7 +140,7 @@ export default function SettingsPage() {
               </h2>
 
               <p className="mt-1 text-sm text-slate-400">
-                Choose which monitoring events should send an email.
+                Choose which monitoring events should send an email. Delivery becomes active when server SMTP is configured.
               </p>
             </div>
           </div>
