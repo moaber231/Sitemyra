@@ -25,7 +25,8 @@
 const STORAGE_TOKEN = "sitemyraExtensionToken";
 const STORAGE_API = "sitemyraApiOrigin";
 
-const DEFAULT_API = "https://app.sitemyra.com";
+const DEFAULT_API = "https://api.sitemyra.com";
+const APP_ORIGIN = "https://sitemyra.com";
 
 async function getSettings() {
   const stored = await chrome.storage.local.get([STORAGE_TOKEN, STORAGE_API]);
@@ -100,8 +101,7 @@ async function monitorCurrentPage(recipeKey) {
 }
 
 async function openInSitemyra(path) {
-  const { apiOrigin } = await getSettings();
-  await chrome.tabs.create({ url: `${apiOrigin}${path}` });
+  await chrome.tabs.create({ url: `${APP_ORIGIN}${path}` });
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -112,8 +112,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ connected: Boolean(token) });
         return;
       }
-      case "connect":
-        await setToken(String(message.token || "").trim());
+      case "connect": {
+        const token = String(message.token || "").trim();
+        if (!token.startsWith("sitemyra_ext_")) {
+          sendResponse({ connected: false, error: "Paste a valid Sitemyra extension token." });
+          return;
+        }
+        await setToken(token);
         sendResponse({ connected: true });
         return;
       }

@@ -2,10 +2,10 @@
   "manifest_version": 3,
   "name": "Sitemyra — Monitor with Sitemyra",
   "short_name": "Sitemyra",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Send any public competitor or product page to Sitemyra as a monitor, from the page you are already on.",
   "permissions": ["activeTab", "storage"],
-  "host_permissions": ["https://*/*", "http://*/*"],
+  "host_permissions": ["https://api.sitemyra.com/*"],
   "action": {
     "default_title": "Monitor with Sitemyra",
     "default_popup": "popup/popup.html"

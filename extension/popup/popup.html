@@ -23,6 +23,10 @@
       }
       button.btn.primary { background: #0052ff; border-color: #0052ff; color: #fff; }
       button.btn:disabled { opacity: 0.55; cursor: default; }
+      #token {
+        box-sizing: border-box; width: 100%; margin-bottom: 8px; padding: 10px 12px;
+        border: 1px solid #e2e8f0; border-radius: 10px; background: #fff;
+      }
       #status { font-size: 12px; margin-top: 10px; min-height: 16px; }
       #status.err { color: #dc2626; }
       #status.ok { color: #16a34a; }
@@ -40,7 +44,16 @@
         Paste the extension token from Sitemyra → Extension. It can read and create
         monitors — and nothing else.
       </p>
-      <input id="token" placeholder="sitemyra_ext_…" class="hidden" />
+      <label class="sub" for="token">Extension token</label>
+      <input
+        id="token"
+        type="password"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="sitemyra_ext_…"
+        aria-label="Sitemyra extension token"
+      />
+      <button class="btn primary" id="connectToken" type="button">Connect</button>
       <a class="btn" id="openSettings" href="#">Get a token in Sitemyra</a>
     </div>
 
