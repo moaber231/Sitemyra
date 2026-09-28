@@ -4,10 +4,12 @@ from .views import (
     AlertChannelDetailView,
     AlertChannelListCreateView,
     AlertChannelTestView,
+    NotificationHistoryView,
     NotificationPreferenceView,
 )
 
 urlpatterns = [
+    path("history/", NotificationHistoryView.as_view(), name="notification-history"),
     path(
         "preferences/",
         NotificationPreferenceView.as_view(),

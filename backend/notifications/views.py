@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -7,8 +8,12 @@ from billing.models import get_plan_for_user, plan_limits
 from workspaces.models import Workspace
 from workspaces.permissions import require_role
 
-from .models import AlertChannel, NotificationPreference
-from .serializers import AlertChannelSerializer, NotificationPreferenceSerializer
+from .models import AlertChannel, NotificationEvent, NotificationPreference
+from .serializers import (
+    AlertChannelSerializer,
+    NotificationHistorySerializer,
+    NotificationPreferenceSerializer,
+)
 from .services import test_channel_delivery
 
 
@@ -21,6 +26,74 @@ class NotificationPreferenceView(generics.RetrieveUpdateAPIView):
             user=self.request.user
         )
         return preferences
+
+
+class NotificationHistoryView(APIView):
+    """Paginated delivery history, scoped to owned monitors/workspaces.
+
+    Provider error detail and channel configuration are deliberately omitted:
+    provider exceptions can contain destination details and are not needed to
+    show delivery status, attempts, and time in the dashboard.
+    """
+
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        try:
+            limit = int(request.query_params.get("limit", 20))
+            offset = int(request.query_params.get("offset", 0))
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "limit and offset must be integers."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if offset < 0:
+            return Response(
+                {"detail": "offset must not be negative."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        limit = min(max(limit, 1), 100)
+
+        rows = NotificationEvent.objects.select_related("monitor").prefetch_related(
+            "deliveries"
+        )
+        api_key = getattr(request, "api_key", None)
+        if api_key is not None:
+            if "notifications:read" not in (api_key.scopes or "").split():
+                return Response(
+                    {"detail": "This API key cannot read notification history."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            if api_key.workspace_id:
+                rows = rows.filter(monitor__workspace_id=api_key.workspace_id)
+            else:
+                rows = rows.filter(monitor__user=request.user)
+        elif request.user.is_superuser:
+            pass
+        else:
+            workspace_ids = list(
+                request.user.workspace_memberships.values_list(
+                    "workspace_id", flat=True
+                )
+            ) + list(
+                request.user.owned_workspaces.values_list("id", flat=True)
+            )
+            rows = rows.filter(
+                Q(monitor__user=request.user)
+                | Q(monitor__workspace_id__in=workspace_ids)
+            )
+
+        total = rows.count()
+        page = rows.order_by("-created_at", "-id")[offset : offset + limit]
+        return Response(
+            {
+                "count": total,
+                "limit": limit,
+                "offset": offset,
+                "next_offset": offset + limit if offset + limit < total else None,
+                "results": NotificationHistorySerializer(page, many=True).data,
+            }
+        )
 
 
 class AlertChannelListCreateView(generics.ListCreateAPIView):

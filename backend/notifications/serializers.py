@@ -1,6 +1,11 @@
 from rest_framework import serializers
 
-from .models import AlertChannel, NotificationPreference
+from .models import (
+    AlertChannel,
+    NotificationDelivery,
+    NotificationEvent,
+    NotificationPreference,
+)
 
 
 class NotificationPreferenceSerializer(serializers.ModelSerializer):
@@ -61,3 +66,28 @@ class AlertChannelSerializer(serializers.ModelSerializer):
         if "config" in validated_data:
             instance.config_encrypted = validated_data.pop("config")
         return super().update(instance, validated_data)
+
+
+class NotificationDeliveryHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationDelivery
+        fields = ("channel_type", "status", "attempts", "created_at")
+        read_only_fields = fields
+
+
+class NotificationHistorySerializer(serializers.ModelSerializer):
+    monitor_id = serializers.UUIDField(read_only=True)
+    monitor_name = serializers.CharField(source="monitor.name", read_only=True)
+    deliveries = NotificationDeliveryHistorySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = NotificationEvent
+        fields = (
+            "id",
+            "monitor_id",
+            "monitor_name",
+            "event_type",
+            "created_at",
+            "deliveries",
+        )
+        read_only_fields = fields

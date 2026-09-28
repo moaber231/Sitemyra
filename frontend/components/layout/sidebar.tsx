@@ -30,6 +30,7 @@ const items = [
   { href: "/dashboard/discover", label: "Discover", icon: Sparkles },
   { href: "/dashboard/signals", label: "Signals", icon: LayoutDashboard },
   { href: "/dashboard/monitors", label: "Monitors", icon: ListChecks },
+  { href: "/dashboard/notifications", label: "Notification History", icon: BellRing },
   { href: "/dashboard/reports", label: "Reports", icon: FileText },
   { href: "/dashboard/organization", label: "Agency", icon: Building2 },
   { href: "/dashboard/onboarding", label: "Onboarding", icon: Rocket },
