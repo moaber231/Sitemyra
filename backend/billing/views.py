@@ -31,7 +31,8 @@ def _billing_not_configured():
         {
             "detail": (
                 "Billing is not configured on this server. "
-                "Set STRIPE_SECRET_KEY (and price IDs) to enable checkout."
+                "Checkout requires Stripe API access, both plan prices, "
+                "and a signed-webhook secret."
             ),
             "code": "billing_not_configured",
         },
@@ -151,6 +152,9 @@ def create_checkout(request):
             )
         return _billing_not_configured()
 
+    if not os.getenv("STRIPE_WEBHOOK_SECRET", "").strip():
+        return _billing_not_configured()
+
     sub = get_or_create_subscription(request.user)
     if not is_price_configured(plan):
         return _price_not_configured(plan)
@@ -201,6 +205,8 @@ def create_portal_session(request):
             },
             status=status.HTTP_409_CONFLICT,
         )
+    if not os.getenv("STRIPE_WEBHOOK_SECRET", "").strip():
+        return _billing_not_configured()
     import logging
 
     logger = logging.getLogger(__name__)

@@ -36,7 +36,12 @@ class IntegrationStatusTests(SimpleTestCase):
 
         self.assertFalse(status["configured"])
         self.assertEqual(
-            set(status["missing"]), {"STRIPE_PRICE_PRO", "STRIPE_PRICE_BUSINESS"}
+            set(status["missing"]),
+            {
+                "STRIPE_PRICE_PRO",
+                "STRIPE_PRICE_BUSINESS",
+                "STRIPE_WEBHOOK_SECRET",
+            },
         )
         self.assertNotIn("test-only-placeholder", status["detail"])
 

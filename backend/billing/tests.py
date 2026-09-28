@@ -76,6 +76,7 @@ KEYED_ENV = {
     "STRIPE_SECRET_KEY": "sk_test_123",
     "STRIPE_PRICE_PRO": "price_pro_123",
     "STRIPE_PRICE_BUSINESS": "price_biz_123",
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_123",
 }
 
 
@@ -93,7 +94,10 @@ class CheckoutTests(APITestCase):
 
     def test_missing_price_returns_503(self):
         _auth(self.client)
-        env = {"STRIPE_SECRET_KEY": "sk_test_123"}
+        env = {
+            "STRIPE_SECRET_KEY": "sk_test_123",
+            "STRIPE_WEBHOOK_SECRET": "whsec_test_123",
+        }
         with patch.dict(os.environ, env, clear=False), patch(
             "billing.views.stripe_client", return_value=object()
         ):
@@ -106,6 +110,23 @@ class CheckoutTests(APITestCase):
             response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE
         )
         self.assertEqual(response.data["code"], "price_not_configured")
+
+    def test_missing_webhook_secret_blocks_checkout_before_customer_creation(self):
+        _auth(self.client)
+        env = {
+            **KEYED_ENV,
+            "STRIPE_WEBHOOK_SECRET": "",
+        }
+        with patch.dict(os.environ, env, clear=False), patch(
+            "billing.views.stripe_client", return_value=_FakeStripe
+        ):
+            with patch.object(_FakeCustomers, "create") as create_customer:
+                response = self.client.post(
+                    reverse("billing-checkout"), {"plan": "pro"}, format="json"
+                )
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(response.data["code"], "billing_not_configured")
+        create_customer.assert_not_called()
 
     def test_successful_checkout(self):
         user = _auth(self.client)
@@ -143,6 +164,20 @@ class CheckoutTests(APITestCase):
 
 
 class PortalTests(APITestCase):
+    def test_missing_webhook_secret_blocks_portal_session(self):
+        user = _auth(self.client)
+        user.subscription.stripe_customer_id = "cus_test123"
+        user.subscription.save(update_fields=["stripe_customer_id"])
+        env = {**KEYED_ENV, "STRIPE_WEBHOOK_SECRET": ""}
+        with patch.dict(os.environ, env, clear=False), patch(
+            "billing.views.stripe_client", return_value=_FakeStripe
+        ), patch.object(_FakePortalSessions, "create") as create_portal:
+            response = self.client.post(reverse("billing-portal"))
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(response.data["code"], "billing_not_configured")
+        create_portal.assert_not_called()
+
     def test_portal_without_customer_returns_409(self):
         _auth(self.client)
         with patch.dict(os.environ, KEYED_ENV, clear=False), patch(

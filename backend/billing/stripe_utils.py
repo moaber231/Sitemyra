@@ -17,8 +17,13 @@ def stripe_client():
 
 
 def is_stripe_configured() -> bool:
-    """True only when live Stripe calls are actually possible."""
-    return stripe_client() is not None
+    """True only when checkout and signed subscription sync are ready."""
+    return (
+        stripe_client() is not None
+        and bool(os.getenv("STRIPE_WEBHOOK_SECRET", "").strip())
+        and is_price_configured("pro")
+        and is_price_configured("business")
+    )
 
 
 def price_id_for_plan(plan: str) -> str:
