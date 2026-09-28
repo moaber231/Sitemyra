@@ -18,7 +18,7 @@ export function marketingMetadata({
   const canonical = path === "/" ? "/" : path;
   const socialTitle =
     path === "/"
-      ? "Sitemyra — Know when your competitors change."
+      ? "Sitemyra — Know when your competitors move."
       : `${title} — ${SITE_NAME}`;
 
   return {
@@ -38,7 +38,7 @@ export function marketingMetadata({
           url: "/opengraph-image",
           width: 1200,
           height: 630,
-          alt: "Sitemyra — Know when your competitors change.",
+          alt: "Sitemyra — Know when your competitors move.",
         },
       ],
     },

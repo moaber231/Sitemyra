@@ -28,7 +28,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Know when your competitors change.`,
+    default: `${SITE_NAME} — Know when your competitors move.`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -51,20 +51,20 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — Know when your competitors change.`,
+    title: `${SITE_NAME} — Know when your competitors move.`,
     description: SITE_DESCRIPTION,
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Sitemyra — Know when your competitors change.",
+        alt: "Sitemyra — Know when your competitors move.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — Know when your competitors change.`,
+    title: `${SITE_NAME} — Know when your competitors move.`,
     description: SITE_DESCRIPTION,
     images: ["/opengraph-image"],
   },
