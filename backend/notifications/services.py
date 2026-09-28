@@ -519,6 +519,20 @@ def send_owner_email(monitor, subject, message) -> dict:
         return {"ok": False, "status": "failed",
                 "error": "Monitor owner has no email address.",
                 "attempts": 0, "permanent": True}
+    if settings.EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+        from common.integration_status import smtp_missing_environment
+
+        missing = smtp_missing_environment()
+        if missing:
+            detail = "EMAIL NOT CONFIGURED. Missing: " + ", ".join(missing)
+            _log_safe("warning", "email_not_configured", monitor, None, "")
+            return {
+                "ok": False,
+                "status": "not_configured",
+                "error": detail,
+                "attempts": 0,
+                "permanent": True,
+            }
     try:
         _send_transactional_email(
             subject=subject,

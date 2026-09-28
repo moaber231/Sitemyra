@@ -115,7 +115,7 @@ export default function SettingsPage() {
 
       <div id="alerts" className="scroll-mt-24">
         <AlertChannels
-          description="Route Sitemyra alerts to the channels you trust. Email is active — connect Slack and Discord webhooks from the Alert Channels page."
+          description="Route Sitemyra alerts to the channels you trust. Email uses your account address when the server SMTP configuration is complete; connect Slack and Discord webhooks from Alert Channels."
           channels={alertChannels}
         />
       </div>

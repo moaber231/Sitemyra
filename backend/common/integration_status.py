@@ -16,6 +16,28 @@ def _present(*names: str) -> bool:
     return all(bool(os.getenv(name, "").strip()) for name in names)
 
 
+SMTP_REQUIRED_ENV = (
+    "EMAIL_HOST",
+    "EMAIL_PORT",
+    "EMAIL_HOST_USER",
+    "EMAIL_HOST_PASSWORD",
+    "EMAIL_FROM",
+)
+STRIPE_REQUIRED_ENV = (
+    "STRIPE_SECRET_KEY",
+    "STRIPE_PRICE_PRO",
+    "STRIPE_PRICE_BUSINESS",
+)
+
+
+def smtp_missing_environment():
+    """Return names of missing SMTP settings, never their values."""
+    return [
+        name for name in SMTP_REQUIRED_ENV
+        if not os.getenv(name, "").strip()
+    ]
+
+
 def _artifact_storage_status() -> dict:
     try:
         from .artifact_storage import storage_status
@@ -32,11 +54,16 @@ def _artifact_storage_status() -> dict:
 
 def integration_status() -> dict:
     debug = bool(settings.DEBUG)
-    stripe_key = bool(os.getenv("STRIPE_SECRET_KEY", "").strip())
+    stripe_missing = [
+        name for name in STRIPE_REQUIRED_ENV
+        if not os.getenv(name, "").strip()
+    ]
+    stripe = not stripe_missing
     webhook_secret = bool(os.getenv("STRIPE_WEBHOOK_SECRET", "").strip())
     google = _present("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET")
     github = _present("GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET")
-    smtp = bool(os.getenv("EMAIL_HOST", "").strip())
+    smtp_missing = smtp_missing_environment()
+    smtp = not smtp_missing
 
     return {
         "core": {
@@ -59,13 +86,15 @@ def integration_status() -> dict:
         },
         "optional_integrations": {
             "stripe": {
-                "configured": stripe_key,
+                "configured": stripe,
                 "production_required_for_billing": True,
-                "status": "ready" if stripe_key else "disabled",
+                "missing": stripe_missing,
+                "status": "ready" if stripe else "not_configured",
                 "detail": (
                     "Live billing ready."
-                    if stripe_key
-                    else "Billing endpoints return 503 billing_not_configured."
+                    if stripe
+                    else "Billing is not configured. Missing: "
+                    + ", ".join(stripe_missing)
                 ),
             },
             "stripe_webhook": {
@@ -101,17 +130,23 @@ def integration_status() -> dict:
             },
             "smtp_email": {
                 "configured": smtp,
-                "status": "ready" if smtp else "disabled",
+                "status": "ready" if smtp else "not_configured",
+                "missing": smtp_missing,
                 "detail": (
                     "SMTP configured."
                     if smtp
-                    else "Email delivery unavailable; console backend in dev."
+                    else "EMAIL NOT CONFIGURED. Missing: "
+                    + ", ".join(smtp_missing)
                 ),
             },
             "slack_discord_webhook": {
-                "configured": True,
-                "status": "ready-partial",
-                "detail": "Delivery via stored webhook URLs; no global key required.",
+                "configured": False,
+                "configuration_scope": "per-user",
+                "status": "user_managed",
+                "detail": (
+                    "No global key is required. Each user must create and test "
+                    "a destination under Alert Channels."
+                ),
             },
             "artifact_storage": _artifact_storage_status(),
         },
@@ -139,11 +174,19 @@ def log_integration_warnings() -> None:
     if not status["core"]["django_secret_key"]["configured"]:
         logger.warning("DJANGO_SECRET_KEY is still the development default")
     if not status["optional_integrations"]["stripe"]["configured"]:
-        logger.warning("Stripe is not configured: billing returns 503")
+        logger.warning(
+            "Stripe billing is not configured: missing %s",
+            ", ".join(status["optional_integrations"]["stripe"]["missing"]),
+        )
     if not status["optional_integrations"]["stripe_webhook"]["configured"]:
         logger.warning(
             "STRIPE_WEBHOOK_SECRET is not set: webhooks rejected "
             "(503 in production)"
+        )
+    if not status["optional_integrations"]["smtp_email"]["configured"]:
+        logger.warning(
+            "EMAIL NOT CONFIGURED: missing %s",
+            ", ".join(status["optional_integrations"]["smtp_email"]["missing"]),
         )
     flags = status["development_only_flags"]
     if not flags["honoured"] and any(
