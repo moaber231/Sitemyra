@@ -274,6 +274,35 @@ class ActivateTests(IntelligenceApiTestCase):
         response.delayed = delayed
         return response
 
+    def test_activation_without_analysis_id_returns_bad_request(self):
+        response = self.client.post(
+            reverse("intelligence-activate"),
+            {"url": "https://competitor.com"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_activation_with_missing_analysis_returns_not_found(self):
+        response = self.client.post(
+            reverse("intelligence-activate"),
+            {"analysis_id": "00000000-0000-0000-0000-000000000000"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unauthenticated_activation_is_rejected(self):
+        self.client.force_authenticate(user=None)
+
+        response = self.client.post(
+            reverse("intelligence-activate"),
+            {"analysis_id": self.analysis_id},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_monitor_everything_creates_monitors_and_a_product_watch(self):
         response = self.activate(recipe="everything")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -286,6 +315,22 @@ class ActivateTests(IntelligenceApiTestCase):
         for monitor in created:
             self.assertTrue(monitor.url.startswith("https://competitor.com"))
             self.assertTrue(monitor.name)
+
+    def test_activation_persists_discovered_url_longer_than_default_urlfield_limit(self):
+        from intelligence.models import DiscoveredTarget
+
+        target = self.targets[0]
+        long_url = "https://competitor.com/" + "deep-path/" * 22 + "pricing"
+        self.assertGreater(len(long_url), 200)
+        self.assertLessEqual(len(long_url), 1000)
+        DiscoveredTarget.objects.filter(id=target["id"]).update(url=long_url)
+
+        response = self.activate(target_ids=[target["id"]])
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["created"], 1)
+        self.assertEqual(response.data["monitors"][0]["url"], long_url)
+        self.assertEqual(Monitor.objects.get().url, long_url)
 
     def test_activation_respects_the_free_plan_limit_and_says_why(self):
         Subscription.objects.filter(user=self.user).update(plan="free")

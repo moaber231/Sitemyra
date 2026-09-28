@@ -41,8 +41,12 @@ class Monitor(models.Model):
 
     name = models.CharField(max_length=150)
 
+    # URL intake permits source/discovered URLs up to 1000 characters. Keep
+    # monitor persistence aligned with that limit instead of URLField's
+    # default varchar(200), which can reject otherwise valid activations.
     url = models.URLField(
-        validators=[URLValidator(schemes=("http", "https"))]
+        max_length=1000,
+        validators=[URLValidator(schemes=("http", "https"))],
     )
 
     active = models.BooleanField(default=True)

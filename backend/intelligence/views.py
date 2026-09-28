@@ -259,6 +259,11 @@ def activate(request):
     serializer = ActivationRequestSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     data = serializer.validated_data
+    if not data.get("analysis_id"):
+        return Response(
+            {"detail": "An analysis_id is required to activate discovered targets."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     analysis = get_visible_analysis(request, data["analysis_id"])
     workspace = _workspace_for(request, data.get("workspace"))
