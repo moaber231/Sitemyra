@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { DashboardHeader } from "@/components/navigation/DashboardHeader";
-import { SectionLabel } from "@/components/intelligence/primitives";
 import {
   createClientWorkspace,
   createOrganization,
@@ -91,8 +90,8 @@ export default function OrganizationPage() {
         <div className="apeiro-stagger stagger-1">
           <DashboardHeader title="Agency" />
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Run competitive intelligence for many clients from one account: separate
-            watchlists, separate alerts, branded reports.
+            Keep each client&apos;s competitors and monitors in a separate workspace.
+            Agency billing and branded reports are optional.
           </p>
         </div>
 
@@ -112,9 +111,9 @@ export default function OrganizationPage() {
             }}
             className="apeiro-card p-6"
           >
-            <h2 className="text-sm font-semibold text-foreground">Create an agency</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              One account, many client workspaces. You become its owner.
+              <h2 className="text-sm font-semibold text-foreground">Create an agency workspace</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+              Group client workspaces under one agency. You become its owner.
             </p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <input
@@ -162,8 +161,9 @@ export default function OrganizationPage() {
                 Client workspaces
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {active?.limits.max_client_workspaces} included on the {active?.plan} plan ·{" "}
-                {active?.clients} created
+                {active?.billing_active
+                  ? `${active.limits.max_client_workspaces} client workspaces included on the ${active.plan} plan · ${active.clients} created`
+                  : `${active?.clients ?? 0} client workspace(s) created · No paid agency subscription is active.`}
               </p>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -214,9 +214,9 @@ export default function OrganizationPage() {
                 <Palette size={15} className="text-accent" aria-hidden="true" />
                 Report branding
               </h2>
-              {!active?.limits.white_label ? (
+              {!active?.billing_active || !active?.limits.white_label ? (
                 <p className="mt-2 text-sm text-muted-foreground">
-                  White-label reports are part of the Pro and Business plans.
+                  Branded reports require an active paid Pro or Business agency subscription.
                 </p>
               ) : (
                 <>
@@ -278,35 +278,24 @@ function AgencyPanel({ org }: { org: Organization }) {
             {org.name}
           </h2>
           <p className="mt-0.5 text-xs capitalize text-muted-foreground">
-            {org.role} · {org.plan} plan
+            {org.role} · {org.billing_active ? `${org.plan} plan` : "Not billed"}
           </p>
         </div>
         <span className="apeiro-badge bg-secondary text-secondary-foreground capitalize">
-          {org.is_active ? "Active" : "Deactivated"}
+          {org.billing_active ? "Paid" : "Not billed"}
         </span>
       </div>
-      <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Seats" value={`${org.seats}/${org.limits.max_seats}`} />
-        <Stat label="Clients" value={`${org.clients}/${org.limits.max_client_workspaces}`} />
-        <Stat label="URLs" value={`${org.limits.max_monitors}`} />
-        <Stat label="History" value={`${org.limits.history_days}d`} />
-      </dl>
-      <p className="mt-4">
-        <SectionLabel>Note</SectionLabel>{" "}
-        <span className="text-xs text-muted-foreground">
-          Plan limits apply across the whole agency. Client monitors are paused, never deleted,
-          if the agency downgrades.
-        </span>
-      </p>
+      {org.billing_active ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          {org.seats} of {org.limits.max_seats} seats · {org.clients} of{" "}
+          {org.limits.max_client_workspaces} client workspaces · up to{" "}
+          {org.limits.max_monitors} monitored pages
+        </p>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">
+          No paid agency subscription is active. Paid seats and branded reports are unavailable.
+        </p>
+      )}
     </section>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-muted/30 px-3 py-2.5">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="tabular-nums text-base font-semibold text-foreground">{value}</dd>
-    </div>
   );
 }

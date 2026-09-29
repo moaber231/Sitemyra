@@ -1411,6 +1411,21 @@ class AgencyTests(IntelligenceTestCase):
         self.assertEqual(membership.role, OrganizationMembership.OWNER)
         self.assertEqual(self.response.data["role"], "owner")
 
+    def test_unpaid_agency_is_explicitly_reported_as_not_billed(self):
+        self.assertEqual(self.response.data["plan"], "pro")
+        self.assertFalse(self.response.data["billing_active"])
+
+    def test_paid_agency_reports_billing_active(self):
+        self.org.mrr_cents = 1900
+        self.org.save(update_fields=["mrr_cents"])
+
+        response = self.client.get(
+            reverse("intelligence-organization-detail", args=[self.org_id])
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["billing_active"])
+
     def test_an_agency_name_is_required(self):
         response = self.client.post(reverse("intelligence-organizations"), {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

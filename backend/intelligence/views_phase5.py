@@ -121,7 +121,7 @@ def _serialize_organization(organization, user) -> dict:
     role = role_in_organization(user, organization)
     seats = organization.memberships.count()
     clients = organization.client_workspaces.count()
-    from billing.models import PLAN_LIMITS, plan_limits
+    from billing.models import PLAN_LIMITS, _organization_is_paid, plan_limits
 
     limits = plan_limits(organization.plan)
     return {
@@ -131,6 +131,7 @@ def _serialize_organization(organization, user) -> dict:
         "role": role,
         "branding": organization.branding or {},
         "plan": organization.plan,
+        "billing_active": _organization_is_paid(organization),
         "mrr_cents": organization.mrr_cents,
         "is_active": organization.is_active,
         "seats": seats,

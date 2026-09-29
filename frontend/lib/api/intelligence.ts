@@ -660,6 +660,7 @@ export type Organization = {
   role: string;
   branding: Record<string, unknown>;
   plan: string;
+  billing_active: boolean;
   mrr_cents: number;
   is_active: boolean;
   seats: number;
