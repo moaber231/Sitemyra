@@ -38,7 +38,7 @@ export default function PulsePage() {
       <div className="mx-auto max-w-5xl">
         <div className="apeiro-stagger stagger-1">
           <DashboardHeader
-            title="Competitor pulse"
+            title="Competitors"
             children={
               <button
                 type="button"

@@ -127,10 +127,21 @@ export default function NotificationHistoryPage() {
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-5 py-6">
         <div>
-          <DashboardHeader title="Notification History" />
+          <DashboardHeader
+            title="Alerts"
+            children={(
+              <div className="flex flex-wrap gap-2">
+                <Link href="/dashboard/channels" className="apeiro-btn apeiro-btn-outline !min-h-0 !py-2 text-xs">
+                  Manage alert destinations
+                </Link>
+                <Link href="/dashboard/settings#alerts" className="apeiro-btn apeiro-btn-ghost !min-h-0 !py-2 text-xs">
+                  Preferences
+                </Link>
+              </div>
+            )}
+          />
           <p className="mt-2 text-sm text-muted-foreground">
-            Monitor changes, failures, recoveries, and their delivery status. Webhook
-            destinations and their secret details are never shown here.
+            See changes, failures, recoveries, and whether each alert was delivered. Destination secrets are never shown here.
           </p>
         </div>
 
@@ -150,10 +161,9 @@ export default function NotificationHistoryPage() {
         ) : items.length === 0 ? (
           <div className="apeiro-card flex flex-col items-center gap-3 p-10 text-center">
             <BellRing size={22} className="text-muted-foreground" aria-hidden="true" />
-            <p className="text-sm font-medium text-foreground">No notification deliveries yet.</p>
+            <p className="text-sm font-medium text-foreground">No alerts recorded yet.</p>
             <p className="max-w-md text-xs leading-5 text-muted-foreground">
-              A history entry is recorded when a monitor change, failure, or recovery is
-              dispatched. Configure delivery destinations under Alert Channels.
+              An entry appears when a monitor change, failure, or recovery is dispatched. Configure where alerts go under Alert destinations.
             </p>
           </div>
         ) : (

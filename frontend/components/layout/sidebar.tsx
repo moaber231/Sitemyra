@@ -21,58 +21,72 @@ import {
   Building2,
   Sparkles,
   Puzzle,
+  ChevronDown,
+  type LucideIcon,
 } from "lucide-react";
 
-const items = [
+type NavigationItem = { href: string; label: string; icon: LucideIcon };
+
+const primaryItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/feed", label: "Feed", icon: Radio },
   { href: "/dashboard/pulse", label: "Competitors", icon: Radar },
-  { href: "/dashboard/discover", label: "Discover", icon: Sparkles },
-  { href: "/dashboard/signals", label: "Signals", icon: LayoutDashboard },
   { href: "/dashboard/monitors", label: "Monitors", icon: ListChecks },
-  { href: "/dashboard/notifications", label: "Notification History", icon: BellRing },
+  { href: "/dashboard/feed", label: "Changes", icon: Radio },
+  { href: "/dashboard/notifications", label: "Alerts", icon: BellRing },
   { href: "/dashboard/reports", label: "Reports", icon: FileText },
-  { href: "/dashboard/organization", label: "Agency", icon: Building2 },
-  { href: "/dashboard/onboarding", label: "Onboarding", icon: Rocket },
+];
+
+const secondaryItems = [
+  { href: "/dashboard/discover", label: "Find competitors", icon: Sparkles },
+  { href: "/dashboard/signals", label: "Market signals", icon: LayoutDashboard },
   { href: "/dashboard/workspaces", label: "Workspaces", icon: Users },
-  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-  { href: "/dashboard/channels", label: "Alert Channels", icon: BellRing },
+  { href: "/dashboard/organization", label: "Agency", icon: Building2 },
+  { href: "/dashboard/channels", label: "Alert destinations", icon: BellRing },
+  { href: "/dashboard/billing", label: "Plan & billing", icon: CreditCard },
   { href: "/dashboard/api-keys", label: "API Keys", icon: KeyRound },
   { href: "/dashboard/extension", label: "Extension", icon: Puzzle },
-  { href: "/dashboard/compliance", label: "Compliance", icon: FileCheck },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/compliance", label: "Compliance reports", icon: FileCheck },
+  { href: "/dashboard/onboarding", label: "Getting started", icon: Rocket },
+  { href: "/dashboard/settings", label: "Preferences", icon: Settings },
 ];
 
 function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+  const renderLink = (item: NavigationItem) => {
+    const active = isActive(item.href);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={onNavigate}
+        aria-current={active ? "page" : undefined}
+        className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+          active
+            ? "bg-primary text-primary-foreground shadow-[0_8px_20px_rgb(0_82_255_/_0.2)]"
+            : "text-muted-foreground hover:bg-accent/5 hover:text-accent"
+        }`}
+      >
+        <item.icon size={17} className="shrink-0 transition-transform duration-200 group-hover:scale-105" />
+        {item.label}
+      </Link>
+    );
+  };
+  const secondaryActive = secondaryItems.some((item) => isActive(item.href));
 
   return (
-    <nav className="flex-1 space-y-1 p-3">
-      {items.map((item) => {
-        const active =
-          pathname === item.href ||
-          (item.href !== "/dashboard" && pathname.startsWith(item.href));
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-              active
-                ? "bg-primary text-primary-foreground shadow-[0_8px_20px_rgb(0_82_255_/_0.2)]"
-                : "text-muted-foreground hover:bg-accent/5 hover:text-accent"
-            }`}
-          >
-            <item.icon
-              size={17}
-              className="shrink-0 transition-transform duration-200 group-hover:scale-105"
-            />
-            {item.label}
-          </Link>
-        );
-      })}
+    <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      {primaryItems.map(renderLink)}
+      <details className="group pt-2" open={secondaryActive || undefined}>
+        <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+          Settings & tools
+          <ChevronDown size={15} className="transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="mt-1 space-y-1 border-l border-border pl-2">
+          {secondaryItems.map(renderLink)}
+        </div>
+      </details>
     </nav>
   );
 }
@@ -99,7 +113,7 @@ function AddMonitorButton({ onNavigate }: { onNavigate?: () => void }) {
         className="apeiro-btn apeiro-btn-primary w-full"
       >
         <Plus size={16} />
-        Add monitor
+        Add competitor
       </Link>
     </div>
   );

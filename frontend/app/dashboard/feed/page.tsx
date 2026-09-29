@@ -71,7 +71,7 @@ export default function FeedPage() {
     <AppShell>
       <div className="mx-auto max-w-4xl">
         <div className="apeiro-stagger stagger-1">
-          <DashboardHeader title="Market feed" />
+          <DashboardHeader title="Recent changes" />
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
             Everything your monitored competitors have published, newest first. Every row
             links to the page it was read from.

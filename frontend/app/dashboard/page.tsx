@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Activity,
   ArrowUpRight,
   CheckCircle2,
   Clock3,
   ExternalLink,
+  Loader2,
   Plus,
   ShieldCheck,
   TriangleAlert,
@@ -99,16 +99,15 @@ export default function DashboardPage() {
   const {
     data: monitors = [],
     isLoading: loading,
+    isError,
+    error,
+    refetch,
   } = useQuery({
     queryKey: ["monitors"],
     queryFn: () => getMonitors(accessToken!),
     enabled: Boolean(accessToken),
     refetchInterval: 30_000,
   });
-
-  const healthyCount = monitors.filter(
-    (monitor) => monitor.status === "healthy",
-  ).length;
 
   const changedCount = monitors.filter(
     (monitor) => monitor.status === "changed",
@@ -122,84 +121,103 @@ export default function DashboardPage() {
     (monitor) => monitor.active,
   ).length;
 
-  const averageResponse = monitors
-    .map((monitor) => monitor.last_response_time_ms)
-    .filter((value): value is number => value != null)
-    .reduce((total, value) => total + value, 0);
-
-  const averageResponseLabel =
-    monitors.length > 0
-      ? Math.round(averageResponse / monitors.length) > 0
-        ? `${Math.round(averageResponse / monitors.length)} ms avg`
-        : "No data yet"
-      : "No data yet";
-
-  const latestChanged = monitors
+  const recentChanges = monitors
     .filter((monitor) => monitor.last_changed_at)
     .sort(
       (left, right) =>
         new Date(right.last_changed_at!).getTime() -
         new Date(left.last_changed_at!).getTime(),
+    )
+    .slice(0, 4);
+  const latestChanged = recentChanges[0];
+
+  const mostRecentCheck = monitors
+    .filter((monitor) => monitor.last_checked_at)
+    .sort(
+      (left, right) =>
+        new Date(right.last_checked_at!).getTime() -
+        new Date(left.last_checked_at!).getTime(),
     )[0];
 
   const attentionCount = changedCount + failingCount;
 
+  if (!accessToken || loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground" aria-busy="true">
+          <Loader2 size={16} className="animate-spin" /> Loading your overview…
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (isError) {
+    return (
+      <AppShell>
+        <div className="apeiro-card mx-auto mt-8 max-w-2xl p-6" role="alert">
+          <h1 className="font-semibold">Your overview could not load.</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {error instanceof Error ? error.message : "Check your connection and try again."}
+          </p>
+          <button type="button" onClick={() => void refetch()} className="apeiro-btn apeiro-btn-primary mt-4">
+            Try again
+          </button>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (monitors.length === 0) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-3xl py-10">
+          <section className="rounded-2xl border border-border bg-card px-6 py-12 text-center sm:px-10">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-accent">
+              <ShieldCheck size={23} />
+            </div>
+            <h1 className="mt-5 text-2xl font-semibold tracking-tight">
+              Monitor your first competitor
+            </h1>
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
+              Add a public website. Sitemyra will find pages worth watching and let you choose what to monitor.
+            </p>
+            <Link
+              href="/dashboard/monitors/new"
+              className="apeiro-btn apeiro-btn-primary mt-6"
+            >
+              <Plus size={16} /> Add competitor
+            </Link>
+          </section>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <div className="mx-auto max-w-7xl px-0 py-6 sm:px-0 lg:py-9">
-        <div className="animate-apeiro-fade-up">
-          <div className="dashboard-hero p-6 sm:p-8">
-            <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-accent opacity-[0.10] blur-3xl" />
-            <div className="pointer-events-none absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-accent-secondary opacity-[0.08] blur-3xl" />
-
-            <div className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 select-none text-[9rem] font-black leading-none tracking-tighter opacity-[0.04] lg:block">
-              {attentionCount === 0 ? "ALL GOOD" : "ACTION"}
-            </div>
-
-            <div className="relative flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
-              <div className="max-w-2xl">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/15 bg-white/70 px-3 py-1 text-xs font-medium text-accent">
-                  <Activity size={13} className="text-accent" />
-                  {attentionCount === 0
-                    ? "Everything looks good"
-                    : `${attentionCount} monitor${attentionCount === 1 ? "" : "s"} need attention`}
-                </div>
-
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                  Know when the web changes.
-                </h1>
-
-                <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                  Sitemyra watches your important pages and tells you when
-                  something changes, fails, or comes back online.
-                </p>
-              </div>
-
-              <Link
-                href="/dashboard/monitors/new"
-                className="apeiro-btn apeiro-btn-accent shrink-0"
-              >
-                <Plus size={16} />
-                Add monitor
-              </Link>
-            </div>
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">
+              {attentionCount === 0
+                ? "Your monitors are up to date."
+                : `${attentionCount} monitor${attentionCount === 1 ? " needs" : "s need"} attention.`}
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Here&apos;s what changed.
+            </h1>
           </div>
-        </div>
+          <Link href="/dashboard/monitors/new" className="apeiro-btn apeiro-btn-primary">
+            <Plus size={16} /> Add competitor
+          </Link>
+        </header>
 
         <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Total monitors"
-            value={String(monitors.length)}
-            hint={`${activeCount} active`}
+            label="Active monitors"
+            value={String(activeCount)}
+            hint={`${monitors.length} total`}
             icon={<ShieldCheck size={18} />}
-          />
-
-          <StatCard
-            label="Healthy"
-            value={String(healthyCount)}
-            hint={averageResponseLabel}
-            icon={<CheckCircle2 size={18} />}
-            tone="success"
           />
 
           <StatCard
@@ -215,22 +233,59 @@ export default function DashboardPage() {
           />
 
           <StatCard
-            label="Failing"
-            value={String(failingCount)}
-            hint={failingCount > 0 ? "Needs attention" : "No failures"}
+            label="Needs attention"
+            value={String(attentionCount)}
+            hint={`${failingCount} failing · ${changedCount} changed`}
             icon={<XCircle size={18} />}
-            tone="danger"
+            tone={attentionCount > 0 ? "danger" : "success"}
+          />
+
+          <StatCard
+            label="Last checked"
+            value={mostRecentCheck ? formatRelativeTime(mostRecentCheck.last_checked_at!) : "Not yet"}
+            hint={mostRecentCheck ? mostRecentCheck.name : "No completed checks"}
+            icon={<Clock3 size={18} />}
           />
         </section>
 
         <section className="apeiro-card mt-6 overflow-hidden">
           <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
             <div>
-              <h2 className="font-semibold tracking-tight">Your monitors</h2>
+              <h2 className="font-semibold tracking-tight">Recent changes</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">What changed on the pages you watch</p>
+            </div>
+            <Link href="/dashboard/feed" className="apeiro-btn apeiro-btn-ghost hidden gap-1.5 sm:inline-flex">
+              All changes <ArrowUpRight size={15} />
+            </Link>
+          </div>
+          {recentChanges.length ? (
+            <ul className="divide-y divide-border">
+              {recentChanges.map((monitor) => (
+                <li key={monitor.id}>
+                  <Link href={`/dashboard/monitors/${monitor.id}`} className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 hover:bg-muted/40 sm:px-6">
+                    <span className="min-w-0 truncate text-sm font-medium">{monitor.name}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      Changed {formatRelativeTime(monitor.last_changed_at!)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-5 py-5 text-sm text-muted-foreground sm:px-6">
+              No changes recorded yet. New updates will appear here.
+            </p>
+          )}
+        </section>
 
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Live monitoring activity
-              </p>
+        <section className="apeiro-card mt-6 overflow-hidden">
+          <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
+            <div>
+                <h2 className="font-semibold tracking-tight">Your monitors</h2>
+
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                Pages Sitemyra checks for changes
+                </p>
             </div>
 
             <Link
@@ -242,12 +297,7 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {loading ? (
-            <MonitorListSkeleton />
-          ) : monitors.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="divide-y divide-border">
+          <div className="divide-y divide-border">
               {monitors.map((monitor) => (
                 <Link
                   key={monitor.id}
@@ -315,58 +365,10 @@ export default function DashboardPage() {
                   </div>
                 </Link>
               ))}
-            </div>
-          )}
+          </div>
         </section>
       </div>
     </AppShell>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="relative overflow-hidden px-5 py-16 text-center sm:px-6">
-      <div className="absolute inset-x-1/3 top-0 h-32 rounded-full bg-accent opacity-10 blur-3xl" />
-
-      <div className="relative">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-accent shadow-lg">
-          <ShieldCheck size={23} />
-        </div>
-
-        <h3 className="mt-5 text-base font-semibold">
-          Your web watchlist starts here
-        </h3>
-
-        <p className="mx-auto mt-1.5 max-w-md text-sm leading-6 text-muted-foreground">
-          Add a URL and Sitemyra will keep an eye on it for you. You&apos;ll
-          know when the content changes or the site goes down.
-        </p>
-
-        <Link
-          href="/dashboard/monitors/new"
-          className="apeiro-btn apeiro-btn-primary mt-6"
-        >
-          <Plus size={16} />
-          Create your first monitor
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function MonitorListSkeleton() {
-  return (
-    <div className="divide-y divide-border">
-      {[1, 2, 3].map((item) => (
-        <div key={item} className="space-y-3 px-5 py-5 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="apeiro-skeleton h-9 w-9 rounded-xl" />
-            <div className="apeiro-skeleton h-4 w-48 max-w-full" />
-          </div>
-          <div className="apeiro-skeleton h-3 w-72 max-w-full" />
-        </div>
-      ))}
-    </div>
   );
 }
 

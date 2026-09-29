@@ -91,10 +91,10 @@ export default function ChannelsPage() {
     <AppShell>
       <div className="mx-auto max-w-4xl py-6">
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <BellRing size={22} /> Alert Channels
+          <BellRing size={22} /> Alert destinations
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Slack, Discord, or generic webhooks. Secrets are encrypted at rest
+          Send alerts to Slack, Discord, or a webhook. Destination secrets are encrypted at rest
           (Fernet) and only a masked preview is ever displayed. Email alerts
           use your account email (see Settings); SMS is not implemented and
           cannot be created. Workspace channels require Owner/Admin role.
