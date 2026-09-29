@@ -433,9 +433,17 @@ def _csv_response(rows):
 
 
 def _compliance_site_label(raw_url):
-    """Return only the host so reports never expose URL credentials or tokens."""
+    """Return only the host so reports never expose URL credentials or tokens.
+
+    Safe to call repeatedly on its own output, so the view can pre-reduce
+    rows and the renderer can still sanitise defensively. A bare host with no
+    scheme is returned unchanged; only a full URL is stripped down.
+    """
+    value = str(raw_url or "").strip()
+    if not value:
+        return "Website unavailable"
     try:
-        parsed = urlsplit(str(raw_url or ""))
+        parsed = urlsplit(value if "//" in value else f"//{value}")
         host = parsed.hostname or ""
         if not host:
             return "Website unavailable"
@@ -491,7 +499,10 @@ def _pdf_response(rows):
                 return "Not available"
 
         def _site_label(raw_url):
-            return str(raw_url or "Website unavailable")[:220]
+            # Re-sanitise here so a caller can never leak a full URL, query
+            # string, or credentials into a customer-facing report. The view
+            # already reduces rows to the host, so this is idempotent.
+            return _compliance_site_label(raw_url)
 
         def _ensure_space(required=14):
             nonlocal y

@@ -29,6 +29,29 @@ class ComplianceReportPdfTests(APITestCase):
             reverse("monitor-compliance-export"), {"type": "pdf"}
         )
 
+    def render_pdf(self, rows):
+        """Render rows through the real PDF renderer and capture drawn text.
+
+        Asserting on the raw PDF bytes is not reliable: reportlab compresses
+        the content stream, so text is not readable from the file. Recording
+        what was drawn is what the reader actually sees.
+        """
+        from reportlab.pdfgen import canvas as reportlab_canvas
+
+        from .views import _pdf_response
+
+        drawn = []
+        original_canvas = reportlab_canvas.Canvas
+
+        class RecordingCanvas(original_canvas):
+            def drawString(self, x, y, text, *args, **kwargs):
+                drawn.append(str(text))
+                return super().drawString(x, y, text, *args, **kwargs)
+
+        with patch("reportlab.pdfgen.canvas.Canvas", RecordingCanvas):
+            response = _pdf_response(rows)
+        return response, "\n".join(drawn)
+
     def download_with_drawn_text(self):
         from reportlab.pdfgen import canvas as reportlab_canvas
 
@@ -79,6 +102,49 @@ class ComplianceReportPdfTests(APITestCase):
         self.assertNotIn("PRIVATE_QUERY_MARKER", text)
         self.assertNotIn("INTERNAL_TRACE_PRIVATE_MARKER", text)
         self.assertNotIn("chg=", text)
+
+    def test_renderer_never_leaks_a_full_url_even_if_a_caller_passes_one(self):
+        # The view reduces rows to the host, but the renderer must be safe on
+        # its own so a future caller cannot leak paths, queries, or tokens.
+        response, text = self.render_pdf(
+            [
+                {
+                    "monitor": "Direct renderer call",
+                    "url": "https://example.test/pricing?token=PRIVATE_QUERY_MARKER",
+                    "status": "healthy",
+                    "total_checks": 1,
+                    "failures": 0,
+                    "changes": 0,
+                    "uptime_pct": 100.0,
+                    "sla_met": "Met",
+                    "avg_latency_ms": 120,
+                    "outage_count": 0,
+                    "last_outage_at": "",
+                    "last_error": "",
+                    "last_checked": "",
+                    "last_changed": "",
+                    "outages": [],
+                }
+            ]
+        )
+
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("Website: example.test", text)
+        self.assertNotIn("/pricing", text)
+        self.assertNotIn("PRIVATE_QUERY_MARKER", text)
+
+    def test_site_label_is_idempotent_and_never_returns_a_path(self):
+        from .views import _compliance_site_label
+
+        full = "https://user:SECRET@Example.test:8443/pricing?token=PRIVATE"
+        once = _compliance_site_label(full)
+
+        # Hostnames are lower-cased by the URL parser.
+        self.assertEqual(once, "example.test:8443")
+        # Re-sanitising already-reduced rows must not lose the host.
+        self.assertEqual(_compliance_site_label(once), once)
+        self.assertEqual(_compliance_site_label(""), "Website unavailable")
+        self.assertEqual(_compliance_site_label(None), "Website unavailable")
 
     def test_csv_omits_private_query_values_and_raw_exception_text(self):
         MonitorCheck.objects.create(
