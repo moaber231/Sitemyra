@@ -32,10 +32,39 @@ class MembershipSerializer(serializers.ModelSerializer):
 
 
 class InviteSerializer(serializers.ModelSerializer):
+    # Where the inviter goes when email is unavailable or fails. Derived, and
+    # only ever visible to Owner/Admin because the whole endpoint is gated.
+    accept_url = serializers.SerializerMethodField()
+
     class Meta:
         model = WorkspaceInvite
-        fields = ("id", "email", "role", "token", "accepted", "created_at")
-        read_only_fields = ("id", "token", "accepted", "created_at")
+        fields = (
+            "id",
+            "email",
+            "role",
+            "token",
+            "accepted",
+            "created_at",
+            "accept_url",
+            "email_status",
+            "email_sent_at",
+            "email_error",
+        )
+        read_only_fields = (
+            "id",
+            "token",
+            "accepted",
+            "created_at",
+            "accept_url",
+            "email_status",
+            "email_sent_at",
+            "email_error",
+        )
+
+    def get_accept_url(self, obj):
+        from .invitation_email import invitation_accept_url
+
+        return invitation_accept_url(obj)
 
     def validate_role(self, value):
         if value == WorkspaceMembership.OWNER:

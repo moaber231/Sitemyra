@@ -115,8 +115,35 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
             )
         serializer = InviteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(workspace=workspace, created_by=request.user)
-        return Response(serializer.data, status=201)
+        invite = serializer.save(workspace=workspace, created_by=request.user)
+
+        # Hand the email to the notification queue. The record starts as
+        # "queued" and the task records the real outcome, so the inviter is
+        # never told a message "was sent" before SMTP accepted it.
+        invite.email_status = WorkspaceInvite.EMAIL_STATUS_QUEUED
+        invite.save(update_fields=["email_status"])
+        try:
+            from .tasks import send_invitation_email
+
+            send_invitation_email.delay(str(invite.id))
+        except Exception:
+            # The invitation and its token already exist, so a broker outage
+            # must not lose the invite. Report it as not delivered and let the
+            # inviter copy the link instead of implying an email went out.
+            import logging
+
+            logging.getLogger(__name__).exception(
+                "workspace invitation enqueue failed [invite_id=%s workspace_id=%s]",
+                invite.id,
+                workspace.id,
+            )
+            invite.email_status = WorkspaceInvite.EMAIL_STATUS_NOT_CONFIGURED
+            invite.email_error = (
+                "Email could not be queued. Share the invitation link instead."
+            )
+            invite.save(update_fields=["email_status", "email_error"])
+
+        return Response(InviteSerializer(invite).data, status=201)
 
 
 @api_view(["POST"])

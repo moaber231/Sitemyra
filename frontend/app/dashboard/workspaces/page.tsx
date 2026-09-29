@@ -59,6 +59,19 @@ export default function WorkspacesPage() {
     getInvites(selected.id).then(setInvites).catch(() => setInvites([]));
   }, [selected]);
 
+  // An emailed invitation lands here as ?invite=<token>. Pre-fill the join
+  // box and scroll to it; the user still confirms, and the server still
+  // verifies the signed-in email matches the invite.
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("invite");
+    if (!token) return;
+    setJoinToken(token);
+    toast.message("Invitation link opened. Sign in, then join the workspace.");
+    document
+      .getElementById("workspace-invite-token")
+      ?.scrollIntoView({ block: "center" });
+  }, []);
+
   const canAdmin = selected?.role === "owner" || selected?.role === "admin";
 
   async function handleCreate() {
@@ -83,11 +96,32 @@ export default function WorkspacesPage() {
         created,
         ...current.filter((invite) => invite.id !== created.id),
       ]);
-      toast.success(
-        "Invitation created. No email was sent; share its token with the invited address.",
-      );
+      // Only claim an email was sent when the server recorded that outcome.
+      if (created.email_status === "sent") {
+        toast.success(`Invitation emailed to ${created.email}.`);
+      } else if (created.email_status === "queued") {
+        toast.success(
+          `Invitation created. Sending the email to ${created.email}…`,
+        );
+      } else {
+        toast.success(
+          "Invitation created, but the email could not be sent. Copy the link and share it.",
+        );
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not invite member.");
+    }
+  }
+
+  async function handleCopyInvite(invite: Invite) {
+    try {
+      // Copy the full accept link, not a bare token: it is what the invitee
+      // needs, and acceptance still requires the invited address.
+      await navigator.clipboard.writeText(invite.accept_url || invite.token);
+      setCopiedInviteId(invite.id);
+      window.setTimeout(() => setCopiedInviteId(null), 2000);
+    } catch {
+      toast.error("Copy failed. Select the link and copy it manually.");
     }
   }
 
@@ -222,8 +256,8 @@ export default function WorkspacesPage() {
                   <>
                     <h3 className="mt-5 text-sm font-medium">Invite teammate</h3>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      Invitations are not emailed. Copy the token below and
-                      send it to the person at that address yourself.
+                      Sitemyra emails the invitation. It can only be accepted
+                      by signing in as the address you enter.
                     </p>
                     <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                       <input
@@ -245,42 +279,46 @@ export default function WorkspacesPage() {
                       </button>
                     </div>
                     {invites.length > 0 && (
-                      <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                      <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
                         {invites.map((i) => (
-                          <div
+                          <li
                             key={i.id}
-                            className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2"
+                            className="rounded-lg border border-border p-3"
                           >
-                            <span className="min-w-0 flex-1 break-all">
-                              {i.email} ({i.role})
-                            </span>
-                            <code className="max-w-full break-all rounded bg-muted px-2 py-1 font-mono">
-                              {i.token}
-                            </code>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                try {
-                                  await navigator.clipboard.writeText(i.token);
-                                  setCopiedInviteId(i.id);
-                                  window.setTimeout(() => setCopiedInviteId(null), 2000);
-                                } catch {
-                                  toast.error("Copy failed. Select the token and copy it manually.");
-                                }
-                              }}
-                              className="apeiro-btn apeiro-btn-outline !min-h-0 !py-1.5 text-xs"
-                              aria-label={`Copy invitation token for ${i.email}`}
-                            >
-                              {copiedInviteId === i.id ? (
-                                <Check size={13} />
-                              ) : (
-                                <Copy size={13} />
-                              )}
-                              {copiedInviteId === i.id ? "Copied" : "Copy token"}
-                            </button>
-                          </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="min-w-0 flex-1 break-all font-medium text-foreground">
+                                {i.email} ({i.role})
+                              </span>
+                              <EmailStatusLabel invite={i} />
+                            </div>
+                            {i.email_status === "sent" ? (
+                              <p className="mt-1">
+                                Email delivered to {i.email}. They accept it by
+                                signing in with that address.
+                              </p>
+                            ) : (
+                              <>
+                                <p className="mt-1">
+                                  {i.email_status === "queued"
+                                    ? "Sending the invitation email…"
+                                    : i.email_error ||
+                                      "The email was not sent. Share the link below."}
+                                </p>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <code className="max-w-full break-all rounded bg-muted px-2 py-1 font-mono">
+                                    {i.token}
+                                  </code>
+                                  <CopyButton
+                                    invite={i}
+                                    copied={copiedInviteId === i.id}
+                                    onCopy={handleCopyInvite}
+                                  />
+                                </div>
+                              </>
+                            )}
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     )}
                   </>
                 )}
@@ -290,5 +328,59 @@ export default function WorkspacesPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function CopyButton({
+  invite,
+  copied,
+  onCopy,
+}: {
+  invite: Invite;
+  copied: boolean;
+  onCopy: (invite: Invite) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onCopy(invite)}
+      className="apeiro-btn apeiro-btn-outline !min-h-0 !py-1.5 text-xs"
+      aria-label={`Copy invitation link for ${invite.email}`}
+    >
+      {copied ? <Check size={13} /> : <Copy size={13} />}
+      {copied ? "Copied" : "Copy link"}
+    </button>
+  );
+}
+
+function EmailStatusLabel({ invite }: { invite: Invite }) {
+  const config = {
+    sent: {
+      label: "Email sent",
+      className: "bg-success-muted text-success",
+    },
+    queued: {
+      label: "Sending…",
+      className: "bg-secondary text-secondary-foreground",
+    },
+    failed: {
+      label: "Email failed",
+      className: "bg-danger-muted text-danger",
+    },
+    not_configured: {
+      label: "Not emailed",
+      className: "bg-warning-muted text-warning",
+    },
+    skipped: {
+      label: "Already joined",
+      className: "bg-muted text-muted-foreground",
+    },
+  }[invite.email_status] ?? {
+    label: "Not emailed",
+    className: "bg-warning-muted text-warning",
+  };
+
+  return (
+    <span className={`apeiro-badge ${config.className}`}>{config.label}</span>
   );
 }

@@ -254,6 +254,9 @@ CELERY_TASK_ROUTES = {
     },
     "notifications.tasks.*": {"queue": "celery_notifications"},
     "monitors.tasks.*": {"queue": "celery_http"},
+    # Invitation mail shares the notification queue so it cannot occupy the
+    # HTTP or browser worker.
+    "workspaces.tasks.*": {"queue": "celery_notifications"},
 }
 
 # Extra task modules imported at worker boot (comma-separated env var).

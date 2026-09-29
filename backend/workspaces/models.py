@@ -110,6 +110,38 @@ class WorkspaceInvite(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Delivery outcome of the invitation email, so an inviter is never told
+    # a message "was sent" unless SMTP actually accepted it:
+    #
+    #   not_configured — SMTP unavailable; share the token manually
+    #   queued         — handed to Celery, outcome not yet known
+    #   sent           — the SMTP server accepted the message
+    #   failed         — SMTP rejected it, or the transport errored
+    #   skipped        — invitation already accepted; no email sent
+    #
+    # Additive with a default so existing rows and the migration stay safe.
+    EMAIL_STATUS_NOT_CONFIGURED = "not_configured"
+    EMAIL_STATUS_QUEUED = "queued"
+    EMAIL_STATUS_SENT = "sent"
+    EMAIL_STATUS_FAILED = "failed"
+    EMAIL_STATUS_SKIPPED = "skipped"
+    EMAIL_STATUS_CHOICES = (
+        (EMAIL_STATUS_NOT_CONFIGURED, "Email not configured"),
+        (EMAIL_STATUS_QUEUED, "Queued"),
+        (EMAIL_STATUS_SENT, "Sent"),
+        (EMAIL_STATUS_FAILED, "Failed"),
+        (EMAIL_STATUS_SKIPPED, "Skipped"),
+    )
+    email_status = models.CharField(
+        max_length=20,
+        choices=EMAIL_STATUS_CHOICES,
+        default=EMAIL_STATUS_NOT_CONFIGURED,
+    )
+    email_sent_at = models.DateTimeField(null=True, blank=True)
+    # Short, human-readable failure reason. Never holds a token, credential,
+    # or raw traceback.
+    email_error = models.CharField(max_length=200, blank=True, default="")
+
     class Meta:
         ordering = ["-created_at"]
 

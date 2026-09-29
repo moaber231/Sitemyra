@@ -24,6 +24,15 @@ export type Invite = {
   token: string;
   accepted: boolean;
   created_at: string;
+  accept_url: string;
+  email_status:
+    | "not_configured"
+    | "queued"
+    | "sent"
+    | "failed"
+    | "skipped";
+  email_sent_at: string | null;
+  email_error: string;
 };
 
 export function getWorkspaces() {
