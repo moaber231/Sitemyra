@@ -102,9 +102,10 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
     def invites(self, request, pk=None):
         workspace = self.get_object()
         if request.method == "GET":
-            if user_role_in_workspace(request.user, workspace) is None:
+            if not require_role(request.user, workspace, minimum="admin"):
                 return Response(
-                    {"detail": "Not a workspace member."}, status=403
+                    {"detail": "Only Owner/Admin can view invitation tokens."},
+                    status=403,
                 )
             invites = workspace.invites.filter(accepted=False)
             return Response(InviteSerializer(invites, many=True).data)
@@ -122,7 +123,11 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def accept_invite(request, token):
     invite = get_object_or_404(WorkspaceInvite, token=token, accepted=False)
-    # Email match is advisory; allow any authenticated user to claim in dev.
+    if (request.user.email or "").strip().casefold() != invite.email.strip().casefold():
+        return Response(
+            {"detail": "Sign in with the email address this invitation was sent to."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
     WorkspaceMembership.objects.update_or_create(
         workspace=invite.workspace,
         user=request.user,

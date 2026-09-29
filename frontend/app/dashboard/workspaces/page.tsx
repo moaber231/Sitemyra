@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Plus, Users } from "lucide-react";
+import { Check, Copy, Loader2, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -27,6 +27,7 @@ export default function WorkspacesPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
   const [joinToken, setJoinToken] = useState("");
+  const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
@@ -76,10 +77,15 @@ export default function WorkspacesPage() {
   async function handleInvite() {
     if (!selected || !inviteEmail.trim()) return;
     try {
-      await inviteMember(selected.id, inviteEmail.trim(), inviteRole);
+      const created = await inviteMember(selected.id, inviteEmail.trim(), inviteRole);
       setInviteEmail("");
-      toast.success("Invite created. Share the token with your teammate.");
-      setInvites(await getInvites(selected.id));
+      setInvites((current) => [
+        created,
+        ...current.filter((invite) => invite.id !== created.id),
+      ]);
+      toast.success(
+        "Invitation created. No email was sent; share its token with the invited address.",
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not invite member.");
     }
@@ -110,11 +116,11 @@ export default function WorkspacesPage() {
     <AppShell>
       <div className="mx-auto max-w-5xl py-6">
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <Users size={22} /> Team Workspaces & RBAC
+          <Users size={22} /> Workspaces
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Create workspaces, invite teammates as Owner, Admin or Viewer.
-          Viewers are read-only; only Owners/Admins manage API keys & webhooks.
+          Group monitors by team. Owners and admins can invite teammates and
+          manage shared alerts.
         </p>
 
         <div className="apeiro-card mt-6 flex flex-col gap-3 p-5 sm:flex-row">
@@ -130,9 +136,13 @@ export default function WorkspacesPage() {
         </div>
 
         <div className="apeiro-card mt-4 flex flex-col gap-3 p-5 sm:flex-row">
+          <label className="sr-only" htmlFor="workspace-invite-token">
+            Invitation token
+          </label>
           <input
+            id="workspace-invite-token"
             className="apeiro-input flex-1"
-            placeholder="Have an invite token? Paste it here"
+            placeholder="Paste an invitation token (sign in with the invited email)"
             value={joinToken}
             onChange={(e) => setJoinToken(e.target.value)}
           />
@@ -211,6 +221,10 @@ export default function WorkspacesPage() {
                 {canAdmin && (
                   <>
                     <h3 className="mt-5 text-sm font-medium">Invite teammate</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      Invitations are not emailed. Copy the token below and
+                      send it to the person at that address yourself.
+                    </p>
                     <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                       <input
                         className="apeiro-input flex-1"
@@ -233,10 +247,38 @@ export default function WorkspacesPage() {
                     {invites.length > 0 && (
                       <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                         {invites.map((i) => (
-                          <p key={i.id} className="break-all">
-                            {i.email} ({i.role}) — token:{" "}
-                            <code className="select-all">{i.token}</code>
-                          </p>
+                          <div
+                            key={i.id}
+                            className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2"
+                          >
+                            <span className="min-w-0 flex-1 break-all">
+                              {i.email} ({i.role})
+                            </span>
+                            <code className="max-w-full break-all rounded bg-muted px-2 py-1 font-mono">
+                              {i.token}
+                            </code>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(i.token);
+                                  setCopiedInviteId(i.id);
+                                  window.setTimeout(() => setCopiedInviteId(null), 2000);
+                                } catch {
+                                  toast.error("Copy failed. Select the token and copy it manually.");
+                                }
+                              }}
+                              className="apeiro-btn apeiro-btn-outline !min-h-0 !py-1.5 text-xs"
+                              aria-label={`Copy invitation token for ${i.email}`}
+                            >
+                              {copiedInviteId === i.id ? (
+                                <Check size={13} />
+                              ) : (
+                                <Copy size={13} />
+                              )}
+                              {copiedInviteId === i.id ? "Copied" : "Copy token"}
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}
