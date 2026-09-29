@@ -1,5 +1,7 @@
 import csv
 import io
+from textwrap import wrap
+from urllib.parse import urlsplit
 
 from django.db.models import Avg, Count, Prefetch, Q
 from django.http import HttpResponse
@@ -323,12 +325,11 @@ def compliance_export(request):
         total = checks.count()
         errors = checks.exclude(error="").count()
         changed = checks.filter(changed=True).count()
-        uptime = round((total - errors) / total * 100, 2) if total else 100.0
+        uptime = round((total - errors) / total * 100, 2) if total else None
         avg_latency = (
             checks.filter(response_time_ms__isnull=False).aggregate(
                 avg=Avg("response_time_ms")
             )["avg"]
-            or 0
         )
         # Outage log: recent failed checks with timestamps + errors.
         outages = list(
@@ -340,21 +341,29 @@ def compliance_export(request):
         rows.append(
             {
                 "monitor": monitor.name,
-                "url": monitor.url,
+                "url": _compliance_site_label(monitor.url),
                 "status": monitor.status,
                 "total_checks": total,
                 "failures": errors,
                 "changes": changed,
                 "uptime_pct": uptime,
-                "sla_met": "yes" if uptime >= 99.9 else "no",
-                "avg_latency_ms": round(float(avg_latency), 1),
-                "outage_count": len(outages) if total else errors,
+                "sla_met": (
+                    "Met" if uptime >= 99.9 else "Not met"
+                ) if total else "Not assessed",
+                "avg_latency_ms": round(float(avg_latency), 1)
+                if avg_latency is not None
+                else None,
+                "outage_count": errors,
                 "last_outage_at": (
                     last_outage["checked_at"].isoformat()
                     if last_outage and last_outage["checked_at"]
                     else ""
                 ),
-                "last_error": (last_outage["error"][:200] if last_outage else ""),
+                "last_error": (
+                    "Request failed; review the monitor for details."
+                    if last_outage
+                    else ""
+                ),
                 "last_checked": monitor.last_checked_at or "",
                 "last_changed": monitor.last_changed_at or "",
                 "outages": [
@@ -364,7 +373,7 @@ def compliance_export(request):
                         ),
                         "status_code": o["status_code"] or "",
                         "response_time_ms": o["response_time_ms"] or "",
-                        "error": (o["error"] or "")[:500],
+                        "error": "Request failed." if o["error"] else "",
                     }
                     for o in outages
                 ],
@@ -423,77 +432,219 @@ def _csv_response(rows):
     return resp
 
 
+def _compliance_site_label(raw_url):
+    """Return only the host so reports never expose URL credentials or tokens."""
+    try:
+        parsed = urlsplit(str(raw_url or ""))
+        host = parsed.hostname or ""
+        if not host:
+            return "Website unavailable"
+        if parsed.port:
+            host = f"{host}:{parsed.port}"
+        return host[:220]
+    except (TypeError, ValueError):
+        return "Website unavailable"
+
+
 def _pdf_response(rows):
     try:
         from reportlab.lib.pagesizes import letter
+        from reportlab.lib.pagesizes import landscape
+        from reportlab.lib.utils import simpleSplit
         from reportlab.pdfgen import canvas
 
         buf = io.BytesIO()
-        c = canvas.Canvas(buf, pagesize=letter)
-        width, height = letter
-        y = height - 50
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(40, y, "Sitemyra - Compliance Report")
-        y -= 20
-        c.setFont("Helvetica", 9)
-        c.drawString(
-            40, y, f"Generated {timezone.now().isoformat()}  |  Monitors: {len(rows)}"
-        )
-        y -= 20
+        page_size = landscape(letter)
+        c = canvas.Canvas(buf, pagesize=page_size)
+        c.setTitle("Sitemyra Monitoring Compliance Report")
+        c.setAuthor("Sitemyra")
+        width, height = page_size
+        margin = 42
+        y = height - margin
 
-        def _ensure_space(lines=1):
+        def _draw_lines(text, font="Helvetica", size=9, color=None, gap=3):
             nonlocal y
-            if y < 60 + lines * 12:
-                c.showPage()
-                y = height - 50
-                c.setFont("Helvetica", 9)
+            if color is not None:
+                c.setFillColorRGB(*color)
+            c.setFont(font, size)
+            for line in simpleSplit(str(text), font, size, width - margin * 2):
+                if y < margin + size + gap:
+                    c.showPage()
+                    y = height - margin
+                c.drawString(margin, y, line)
+                y -= size + gap
+            if color is not None:
+                c.setFillColorRGB(0, 0, 0)
 
-        for r in rows:
-            _ensure_space(2)
-            c.setFont("Helvetica-Bold", 9)
-            c.drawString(
-                40,
-                y,
-                f"{r['monitor'][:40]} | uptime {r['uptime_pct']}% "
-                f"| SLA {r['sla_met']} | checks {r['total_checks']} "
-                f"| fail {r['failures']} | chg {r['changes']} "
-                f"| {r['avg_latency_ms']}ms",
-            )
-            y -= 14
-            c.setFont("Helvetica", 8)
-            _ensure_space(1)
-            c.drawString(
-                48, y,
-                f"outages: {r.get('outage_count', 0)} | last: "
-                f"{r.get('last_outage_at', '') or 'none'} | "
-                f"{(r.get('last_error', '') or '')[:80]}",
-            )
-            y -= 13
-            for o in (r.get("outages", []) or [])[:10]:
-                _ensure_space(1)
-                c.drawString(
-                    56, y,
-                    f"- {o['checked_at']} | {o['status_code']} | "
-                    f"{o['response_time_ms']}ms | {(o['error'] or '')[:90]}",
+        def _date(value):
+            if not value:
+                return "Not checked yet"
+            if isinstance(value, str):
+                from django.utils.dateparse import parse_datetime
+
+                value = parse_datetime(value)
+            if value is None:
+                return "Not available"
+            try:
+                return timezone.localtime(value).strftime("%b %d, %Y %H:%M %Z")
+            except (TypeError, ValueError):
+                return "Not available"
+
+        def _site_label(raw_url):
+            return str(raw_url or "Website unavailable")[:220]
+
+        def _ensure_space(required=14):
+            nonlocal y
+            if y < margin + required:
+                c.showPage()
+                y = height - margin
+                _draw_lines(
+                    "Monitoring Compliance Report (continued)",
+                    font="Helvetica-Bold",
+                    size=10,
                 )
-                y -= 12
-            y -= 4
+                y -= 4
+
+        _draw_lines(
+            "Sitemyra Monitoring Compliance Report",
+            font="Helvetica-Bold",
+            size=18,
+        )
+        _draw_lines(
+            f"Generated {_date(timezone.now())} · {len(rows)} monitored page(s)",
+            size=9,
+            color=(0.35, 0.40, 0.47),
+        )
+        total_checks = sum(int(row.get("total_checks") or 0) for row in rows)
+        total_failures = sum(int(row.get("failures") or 0) for row in rows)
+        total_changes = sum(int(row.get("changes") or 0) for row in rows)
+        _draw_lines(
+            f"Summary: {total_checks} checks · {total_failures} failed checks · "
+            f"{total_changes} detected changes",
+            font="Helvetica-Bold",
+            size=10,
+        )
+        y -= 4
+
+        if not rows:
+            _draw_lines("No monitors are available for this report.", size=10)
+        for index, row in enumerate(rows, start=1):
+            _ensure_space(90)
+            _draw_lines(
+                f"{index}. {row.get('monitor') or 'Monitored page'}",
+                font="Helvetica-Bold",
+                size=12,
+            )
+            _draw_lines(f"Website: {_site_label(row.get('url'))}", size=8)
+            status_labels = {
+                "healthy": "Healthy",
+                "changed": "Change detected",
+                "failing": "Failing",
+                "paused": "Paused",
+                "never_checked": "Not checked yet",
+            }
+            _draw_lines(
+                f"Monitor status: {status_labels.get(row.get('status'), 'Unknown')}",
+                size=9,
+            )
+            checks = int(row.get("total_checks") or 0)
+            if checks:
+                _draw_lines(
+                    f"Availability: {row['uptime_pct']}% across {checks} checks · "
+                    f"SLA target (99.9%): {row['sla_met']}",
+                    size=9,
+                )
+                average = row.get("avg_latency_ms")
+                average_text = f"{average} ms" if average is not None else "not available"
+                _draw_lines(
+                    f"Failed checks: {row['failures']} · "
+                    f"Changes detected: {row['changes']} · "
+                    f"Average response: {average_text} · "
+                    f"Outages: {row['outage_count']}",
+                    size=9,
+                )
+                _draw_lines(f"Last checked: {_date(row.get('last_checked'))}", size=8)
+                if row.get("last_changed"):
+                    _draw_lines(f"Last change: {_date(row['last_changed'])}", size=8)
+                outages = row.get("outages") or []
+                if outages:
+                    _draw_lines("Recent outages", font="Helvetica-Bold", size=9)
+                    for outage in outages[:10]:
+                        code = outage.get("status_code") or "No HTTP status"
+                        response_time = outage.get("response_time_ms")
+                        latency = f" · {response_time} ms" if response_time else ""
+                        _draw_lines(f"{_date(outage.get('checked_at'))} · {code}{latency}", size=8)
+                else:
+                    _draw_lines("No outages recorded.", size=8, color=(0.30, 0.42, 0.35))
+            else:
+                _draw_lines(
+                    "No checks have completed. Availability and SLA are not calculated yet.",
+                    size=9,
+                    color=(0.35, 0.40, 0.47),
+                )
+            y -= 8
+
+        _ensure_space(24)
+        _draw_lines(
+            "Sitemyra reports checks against publicly accessible pages. "
+            "Availability is calculated from recorded checks; it is not a guarantee "
+            "of future uptime.",
+            size=7,
+            color=(0.35, 0.40, 0.47),
+        )
         c.save()
         pdf = buf.getvalue()
     except ImportError:
         # Minimal fallback PDF so the endpoint works without reportlab.
-        lines = ["Sitemyra - Compliance Report", ""]
-        for r in rows:
-            lines.append(
-                f"{r['monitor']} | uptime {r['uptime_pct']}% | "
-                f"SLA {r['sla_met']} | checks {r['total_checks']} | "
-                f"avg {r['avg_latency_ms']}ms | outages {r.get('outage_count', 0)}"
+        lines = [
+            "Sitemyra Monitoring Compliance Report",
+            f"Generated {timezone.now().strftime('%b %d, %Y %H:%M %Z')}",
+            f"{len(rows)} monitored page(s)",
+            "",
+        ]
+        status_labels = {
+            "healthy": "Healthy",
+            "changed": "Change detected",
+            "failing": "Failing",
+            "paused": "Paused",
+            "never_checked": "Not checked yet",
+        }
+        for index, row in enumerate(rows[:30], start=1):
+            lines.extend(
+                [
+                    f"{index}. {row.get('monitor') or 'Monitored page'}",
+                    f"Website: {_compliance_site_label(row.get('url'))}",
+                    f"Monitor status: {status_labels.get(row.get('status'), 'Unknown')}",
+                ]
             )
-            for o in (r.get("outages", []) or [])[:10]:
-                lines.append(f"  outage {o['checked_at']} | {o['error'][:100]}")
-        text = "\n".join(lines)
-        escaped = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-        content = f"BT /F1 10 Tf 40 750 Td ({escaped}) Tj ET"
+            checks = int(row.get("total_checks") or 0)
+            if checks:
+                lines.extend(
+                    [
+                        f"Availability: {row.get('uptime_pct')}% across {checks} checks; "
+                        f"SLA target 99.9%: {row.get('sla_met')}",
+                        f"Failed checks: {row.get('failures', 0)}; "
+                        f"Changes detected: {row.get('changes', 0)}; "
+                        f"Average response: {row.get('avg_latency_ms') or 'not available'} ms; "
+                        f"Outages: {row.get('outage_count', 0)}",
+                    ]
+                )
+            else:
+                lines.append("No checks completed; availability and SLA are not calculated.")
+            lines.append("")
+        if len(rows) > 30:
+            lines.append("Additional monitors are omitted from this basic PDF renderer.")
+        lines.append(
+            "Availability is calculated from recorded checks; it is not a guarantee of future uptime."
+        )
+        lines = [line for item in lines for line in wrap(item, 105) or [""]][:55]
+        escaped = [
+            line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+            for line in lines
+        ]
+        content = "BT /F1 9 Tf 12 TL 40 750 Td " + " Tj T* ".join(
+            f"({line})" for line in escaped
+        ) + " Tj ET"
         pdf = (
             "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
             "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"

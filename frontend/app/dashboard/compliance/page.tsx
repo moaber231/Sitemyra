@@ -48,11 +48,11 @@ export default function CompliancePage() {
     <AppShell>
       <div className="mx-auto max-w-3xl py-6">
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <FileCheck size={22} /> Export Compliance Report
+          <FileCheck size={22} /> Monitoring health report
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          One-click download of uptime, response-time, failure, and change
-          histories for your records — auditor-friendly CSV or PDF.
+          Download a summary of checks, availability, failures, and detected
+          changes for the monitors you can access.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
